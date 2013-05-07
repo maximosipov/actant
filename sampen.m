@@ -45,7 +45,9 @@ function [entropy, conf95] = sampen(data, m, r)
     % count template matches, excluding self-matches
     BB = zeros(1, tpl_len);
     tpl_data = repmat(tpl_data, 2, 1);
-    for i_tpl = 2:tpl_len,
+    % shifting the vector until floor((tpl_len/2)+1 to avoid
+    % double count of the same match
+    for i_tpl = 2:floor((tpl_len/2)+1),
         tpl_diff = abs(tpl_data(1:tpl_len, :) -...
             tpl_data(i_tpl:i_tpl+tpl_len-1, :));
         BB(i_tpl-1) = sum(sum((tpl_diff < r), 2) == m);
@@ -67,7 +69,9 @@ function [entropy, conf95] = sampen(data, m, r)
     % count template matches, excluding self-matches
     AA = zeros(1, tpl_len);
     tpl_data = repmat(tpl_data, 2, 1);
-    for i_tpl = 2:tpl_len,
+    % shifting the vector until floor((tpl_len/2)+1) to avoid
+    % double count of the same match
+    for i_tpl = 2:floor((tpl_len/2)+1),
         tpl_diff = abs(tpl_data(1:tpl_len, :) -...
             tpl_data(i_tpl:i_tpl+tpl_len-1, :));
         AA(i_tpl-1) = sum(sum((tpl_diff < r), 2) == mp);
@@ -85,4 +89,3 @@ function [entropy, conf95] = sampen(data, m, r)
     EE = AA(1:len-mp)./BB(1:len-mp);
     conf95 = std(EE)*tinv(0.95,length(EE))/sqrt(length(EE));
 end
-
