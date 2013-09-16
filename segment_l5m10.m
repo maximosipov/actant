@@ -43,7 +43,7 @@
 %
 
 
-function [l5, m10] = segmen_l5m10(data)
+function [l5, m10] = segment_l5m10(data)
     son = 0;
     soff = 0;
     smid = 0;
