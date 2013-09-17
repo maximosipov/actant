@@ -87,6 +87,12 @@ guidata(hObject, handles);
 % UIWAIT makes actant wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
+addpath('./formats');
+addpath('./sleep');
+addpath('./wake');
+addpath('./rhythm');
+addpath('./other');
+
 global fname;
 global fhandle;
 global fdata;
