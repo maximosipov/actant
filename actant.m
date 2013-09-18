@@ -92,6 +92,7 @@ addpath('./sleep');
 addpath('./wake');
 addpath('./rhythm');
 addpath('./other');
+addpath('./plot');
 
 global fname;
 global fhandle;

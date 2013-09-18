@@ -1,5 +1,23 @@
-function h = plot_2x24(awd, n1, n2, h)
+function h = plot_2x24(h, start, plots, days, tsl, tsr, tsm)
 % PLOT_2x24 Plot actimetry and light data on 24 hours multi-day plot
+%
+% Description:
+%   Plot the data from timeseries on left axis, right axis and as patches
+%   on a multi-day 24-hours plot.
+% 
+% Arguments:
+%   h - figure handle
+%   start - starting datenum (will be rounded down to midnight)
+%   plots - number of plots to display
+%   days - number of days on a single plot
+%   tsl - timeseries for left axis
+%   tsr - timeseries for right axis (optional)
+%   tsm - timeseries for markup (optional)
+%
+% Results:
+%   h - figure handle
+%
+% See also APPEND_24, SPLIT_24, PLOT_HEAT24.
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -28,52 +46,96 @@ function h = plot_2x24(awd, n1, n2, h)
 % OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% Description:
-%   Plot the data from the 3-dimensional array of actimetery and light
-%   data on a multi-day 24-hours plot.
-% 
-% Arguments:
-%   awd - AWD data structure
-%   n1 - first day to plot
-%   n2 - last day to plot
-%
-% Results:
-%   h - figure handle
-%
-% See also APPEND_24, SPLIT_24, PLOT_HEAT24.
 
-    data = awd.data;
-    name = [awd.id ' ' awd.date ' ' awd.time];
-    time = awd.time;
-    sampling = awd.sampling;
+if ~exist('h', 'var'),
+    h = figure;
+end
+if nargin < 4,
+    error('Not enough arguments');
+end
+lylim = [min(tsl.Data) max(tsl.Data)];
+if exist('tsr', 'var') && ~isempty(tsr),
+    rylim = [min(tsr.Data) max(tsr.Data)];
+end
 
-    data_append = append_24(data, time, sampling);
-    data_split = split_24(data_append, sampling);
 
-    if n1 > size(data_split, 1) || n2 > size(data_split, 1) || n2 <= n1,
-        error('PLOT_2X24: Invalid interval from %i to %i\n', n1, n2);
+for i = 1:plots,
+    subplot_tight(plots, 1, i, [0.05 0.05]);
+    % Get data subset
+    t1 = floor(start + i - 1);
+    t2 = floor(start + i + days - 1);
+    tvld = find((tsl.Time > t1) & (tsl.Time < t2));
+    tsld = getsamples(tsl, tvld);
+    tsld_t = tsld.Time;
+    tsld_d = tsld.Data;
+    if isempty(tsld_t),
+        tsld_t = [t1];
+        tsld_d = [NaN];
     end
-
-    if ~exist('h', 'var'),
-        h = figure('Name', name);
-    end
-    xscalemin = ((1:length(data_split(1,:,1)'))*sampling)';
-    xscalenum = datenum(2011, 1, 1, floor(xscalemin/60), mod(xscalemin,60), 0);
-    for i = n1:n2,
-        subplot(n2-n1+1, 1, i-n1+1);
-        [AX,H1,H2] = plotyy(xscalenum, data_split(i,:,1)',...
-               xscalenum, data_split(i,:,2)',...
-              'plot', 'plot');
-        datetick(AX(1), 'x', 15);
-        datetick(AX(2), 'x', 15);
-        xlabel('Time');
-        set(get(AX(1),'Ylabel'),'String','Activity');
-        set(get(AX(2),'Ylabel'),'String','Light');
+    if ~exist('tsr', 'var') || isempty(tsr),
+        % Plot single axes
+        H1 = area(tsld_t, tsld_d);
+        AX = gca;
+        xlim(AX, [t1 t2]);
+        ylim(AX, lylim);
+        datetick(AX, 'x', 15, 'keeplimits');
+        if (i < plots),
+            set(AX, 'XTickLabel', '');
+        end
+        set(get(AX,'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
+        set(AX,'YColor','b');
+        set(H1,'EdgeColor','b');
+        set(H1,'FaceColor','b');
+        title(datestr(t1));
+    else
+        % Plot double axes
+        tvrd = find((tsr.Time > t1) & (tsr.Time < t2));
+        tsrd = getsamples(tsr, tvrd);
+        tsrd_t = tsrd.Time;
+        tsrd_d = tsrd.Data;
+        if isempty(tsrd_t),
+            tsrd_t = [t1];
+            tsrd_d = [NaN];
+        end
+        [AX,H1,H2] = plotyy(tsld_t, tsld_d,...
+                            tsrd_t, tsrd_d,...
+                            'area', 'plot');
+        xlim(AX(1), [t1 t2]);
+        xlim(AX(2), [t1 t2]);
+        ylim(AX(1), lylim);
+        ylim(AX(2), rylim);
+        set(AX(1), 'box', 'off')
+        set(AX(2), 'box', 'off')
+        datetick(AX(1), 'x', 15, 'keeplimits');
+        datetick(AX(2), 'x', 15, 'keeplimits');
+        if (i < plots),
+            set(AX(1), 'XTickLabel', '');
+            set(AX(2), 'XTickLabel', '');
+        end
+        set(get(AX(1),'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
+        set(get(AX(2),'Ylabel'),'String', [tsr.Name ' (' tsr.DataInfo.Units ')']);
         set(AX(1),'YColor','b');
         set(AX(2),'YColor','r');
         set(AX(2),'YDir','reverse');
-        set(H1,'Color','b');
+        set(H1,'EdgeColor','b');
+        set(H1,'FaceColor','b');
         set(H2,'Color','r');
-        title(['Day ', num2str(i)]);
+        title(datestr(t1));
+    end
+    % Plot markup
+    % TODO - we plot all markup currently, some not visible, but want just a subset
+    if exist('tsm', 'var'),
+        tvmd = find((tsm.Time > t1-1) & (tsm.Time < t2+1));
+        tsmd = getsamples(tsm, tvmd);
+        if ~isempty(tsmd.Time),
+            patch_x = [tsmd.Time'; tsmd.Data'; tsmd.Data'; tsmd.Time'];
+            patch_y = zeros(size(patch_x));
+            patch_y(3, :) = lylim(2);
+            patch_y(4, :) = lylim(2);
+            H = patch(patch_x, patch_y, [1, 1, 0]);
+            set(H, 'edgecolor', 'none');
+            uistack(H, 'bottom');
+            xlim([t1 t2]);
+        end
     end
 end
