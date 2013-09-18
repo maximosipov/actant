@@ -1,4 +1,4 @@
-function h = plot_2x24(h, start, plots, days, tsl, tsr, tsm)
+function h = plot_days(h, start, plots, days, tsl, tsr, tsm)
 % PLOT_2x24 Plot actimetry and light data on 24 hours multi-day plot
 %
 % Description:
