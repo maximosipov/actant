@@ -98,11 +98,17 @@ global fname;
 global fhandle;
 global fdata;
 
+global g_plots;
+global g_days;
+
 global phandle;
 
 fname = '';
 fhandle = -1;
 fdata = [];
+
+g_plots = 5;
+g_days = 1;
 
 phandle = -1;
 
@@ -141,20 +147,19 @@ end
 
 
 function update_data(handles)
-global fdata phandle;
+global fdata phandle g_plots g_days;
 % Fill the information panel
-days = length(fdata.data)*fdata.sampling/(24*60);
-info = sprintf('ID: %s\nStart: %s %s\nLength: %f days\nSampling: %i min\nAge: %i\nSex: %s\nWatch: %s',...
-    fdata.id, fdata.date, fdata.time, days, fdata.sampling,...
-    fdata.age, fdata.sex, fdata.watch);
+days = ceil(max(fdata.Time) - min(fdata.Time));
+info = sprintf('Start: %s \nEnd: %s\n',...
+                datestr(min(fdata.Time)), datestr(max(fdata.Time)));
 set(handles.text_info, 'String', info);
 % Plot things
 % if phandle ~= -1,
 %     delete(phandle);
 % end
 phandle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
-plot_2x24(fdata, 1, 5, phandle);
-update_vslider(handles, 1, 1, ceil(days)-4, 1);
+plot_days(phandle, floor(min(fdata.Time)), g_plots, g_days, fdata);
+update_vslider(handles, 1, floor(min(fdata.Time)), floor(max(fdata.Time)), 1);
 update_hslider(handles, 0);
 
 
@@ -212,7 +217,7 @@ if fp ~= 0,
     else
         set(handles.text_fname, 'String', fname);
         set(handles.text_fname, 'ForegroundColor', 'b')
-        fdata = awd_load(fname);
+        fdata = load_actiwatch(fname);
         update_data(handles);
         %plot_heat24(fdata, 'Activity', handles.axis_plot);
     end
@@ -324,11 +329,13 @@ function slider_v_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-global fdata;
-val = get(hObject, 'Value');
-last = get(hObject, 'Max');
-fprintf(1, ['Val: ' num2str(val) ' Max:' num2str(val) '\n']);
-plot_2x24(fdata, last-round(val)+1, last-round(val)+5, handles.uipanel_plot);
+global fdata g_plots g_days;
+start = floor(min(fdata.Time));
+sval = get(hObject, 'Value');
+smax = get(hObject, 'Max');
+smin = get(hObject, 'Min');
+fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
+plot_days(handles.uipanel_plot, start + smax - sval, g_plots, g_days, fdata);
 
 
 % --- Executes during object creation, after setting all properties.
