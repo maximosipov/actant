@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 19-Sep-2013 16:39:05
+% Last Modified by GUIDE v2.5 19-Sep-2013 17:24:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -499,7 +499,83 @@ function menu_analysis_mse_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function menu_file_convert_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_file_convert (see GCBO)
+function menu_file_save_as_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file_save_as (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton_analyze.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_analyze (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton_update_plots.
+function pushbutton_update_plots_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_update_plots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global g_data_ts g_plot_subs g_plot_days;
+start = floor(min(g_data_ts.Time));
+sval = get(handles.slider_v, 'Value');
+smax = get(handles.slider_v, 'Max');
+smin = get(handles.slider_v, 'Min');
+% fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
+plot_days(handles.uipanel_plot, start + smax - sval, g_plot_subs, g_plot_days, g_data_ts);
+
+
+
+function edit_plots_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_plots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_plots as text
+%        str2double(get(hObject,'String')) returns contents of edit_plots as a double
+global g_plot_subs;
+val = get(hObject, 'String');
+g_plot_subs = str2num(val);
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_plots_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_plots (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+global g_plot_subs;
+set(hObject, 'String', num2str(g_plot_subs));
+
+
+function edit_days_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_days (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_days as text
+%        str2double(get(hObject,'String')) returns contents of edit_days as a double
+global g_plot_days;
+val = get(hObject, 'String');
+g_plot_days = str2num(val);
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_days_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_days (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+global g_plot_days;
+set(hObject, 'String', num2str(g_plot_days));
