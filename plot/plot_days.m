@@ -60,8 +60,8 @@ end
 
 
 for i = 1:plots,
-%    subplot_tight(plots, 1, i, [0.05 0.05]);
-    subplot(plots, 1, i);
+    subplot_tight(plots, 1, i, [0.05 0.05]);
+%    subplot(plots, 1, i);
     % Get data subset
     t1 = floor(start + i - 1);
     t2 = floor(start + i + days - 1);
