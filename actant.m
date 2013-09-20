@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 20-Sep-2013 10:52:34
+% Last Modified by GUIDE v2.5 20-Sep-2013 17:08:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -104,9 +104,9 @@ global g_plot_handle;
 
 global g_analysis_func;
 
-g_data_file = '';
-g_data_ts = timeseries;
-g_data_handle = -1;
+g_data_file = {};
+g_data_ts = {};
+g_data_handle = [];
 
 g_plot_subs = 5;
 g_plot_days = 1;
@@ -119,7 +119,7 @@ update_vslider(handles, 0);
 
 function update_vslider(handles, enable, first, last, step, handler)
 global g_data_handle;
-if enable == 0 || g_data_handle == -1,
+if enable == 0 || size(g_data_handle, 1) < 1,
     set(handles.slider_v, 'Enable', 'off');
 else
     set(handles.slider_v, 'Enable', 'on');
@@ -132,21 +132,15 @@ else
 end
 
 
-function update_data(handles)
-global g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days;
-% Update data table
-t_data = get(handles.uitable_data, 'Data');
-i = size(t_data, 1) + 1;
-t_data{i, 1} = 'Main';
-t_data{i, 2} = [g_data_ts.Name ' (' g_data_ts.DataInfo.Units ')'];
-t_data{i, 3} = datestr(min(g_data_ts.Time));
-t_data{i, 4} = datestr(max(g_data_ts.Time));
-t_data{i, 5} = g_data_file;
-set(handles.uitable_data, 'Data', t_data);
-% Update data plot
-g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
-plot_days(g_plot_handle, floor(min(g_data_ts.Time)), g_plot_subs, g_plot_days, g_data_ts);
-update_vslider(handles, 1, floor(min(g_data_ts.Time)), floor(max(g_data_ts.Time)), 1);
+function index = get_plot_index(type, handles)
+index = 0;
+dataset = get(handles.uitable_data, 'Data');
+for i=1:size(dataset, 1),
+    if strcmp(dataset{i}, type),
+        index = i;
+        return;
+    end
+end
 
 
 % --- Outputs from this function are returned to the command line.
@@ -159,27 +153,6 @@ function varargout = actant_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
-% --- Executes on button press in pushbutton_load.
-function pushbutton_load_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_load (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-global g_data_handle g_data_file g_data_ts;
-[fn, fp] = uigetfile('*.*', 'Select the data file');
-if fp ~= 0,
-    g_data_file = [fp fn];
-    g_data_handle = fopen(g_data_file, 'r');
-    if g_data_handle == -1,
-        warndlg(['Could not open file' g_data_file]);
-        g_data_file = '';
-    else
-        set(handles.figure_main, 'Name', ['ACTANT - ' g_data_file]);
-        g_data_ts = load_actiwatch(g_data_file);
-        update_data(handles);
-        %plot_heat24(g_data_ts, 'Activity', handles.axis_plot);
-    end
-end
 
 % --------------------------------------------------------------------
 function FileMenu_Callback(hObject, eventdata, handles)
@@ -250,14 +223,19 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global g_data_ts g_analysis_func;
 analysis_args = get(handles.uitable_analysis, 'Data');
+n = get(handles.popupmenu_dataset, 'Value');
+
+if isempty(g_analysis_func),
+    errordlg('Please select analysis method!');
+    return;
+end
 
 h = waitbar(0, 'Please wait while analysis completes...');
-[~, ~, analysis_vals] = g_analysis_func(g_data_ts, analysis_args);
+[~, ~, analysis_vals] = g_analysis_func(g_data_ts{n}, analysis_args);
 waitbar(1, h);
 close(h);
 
-res = cat(1, analysis_args, analysis_vals);
-set(handles.uitable_analysis, 'Data', res);
+set(handles.uitable_results, 'Data', analysis_vals);
 
 
 % --- Executes on button press in pushbutton_save.
@@ -298,12 +276,32 @@ function slider_v_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 global g_data_ts g_plot_subs g_plot_days;
-start = floor(min(g_data_ts.Time));
+
+ts_main = [];
+idx_main = get_plot_index('Main', handles);
+if idx_main > 0,
+    ts_main = g_data_ts{idx_main};
+end
+ts_top = [];
+idx_top = get_plot_index('Top', handles);
+if idx_top > 0,
+    ts_top = g_data_ts{idx_top};
+end
+ts_markup = [];
+idx_markup = get_plot_index('Markup', handles);
+if idx_markup > 0,
+    ts_markup = g_data_ts{idx_markup};
+end
+
+start = floor(min(ts_main.Time));
 sval = get(hObject, 'Value');
 smax = get(hObject, 'Max');
 smin = get(hObject, 'Min');
+
 % fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
-plot_days(handles.uipanel_plot, start + smax - sval, g_plot_subs, g_plot_days, g_data_ts);
+plot_days(handles.uipanel_plot, start + smax - sval,...
+            g_plot_subs, g_plot_days,...
+            ts_main, ts_top, ts_markup);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -454,22 +452,49 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_open (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_handle g_data_file g_data_ts;
+global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days;
 [fn, fp] = uigetfile('*.*', 'Select the data file');
 if fp ~= 0,
-    g_data_file = [fp fn];
-    g_data_handle = fopen(g_data_file, 'r');
-    if g_data_handle == -1,
-        warndlg(['Could not open file' g_data_file]);
-        g_data_file = '';
-    else
-        set(handles.figure_main, 'Name', ['ACTANT - ' g_data_file]);
-        g_data_ts = load_actiwatch(g_data_file);
-        update_data(handles);
-        %plot_heat24(g_data_ts, 'Activity', handles.axis_plot);
+    % Get and open data file
+    new_file = [fp fn];
+    new_handle = fopen(new_file, 'r');
+    if new_handle == -1,
+        warndlg(['Could not open file' new_file]);
+        return;
     end
-end
+    
+    g_data_file{size(g_data_file, 2)+1} = new_file;
+    g_data_handle{size(g_data_handle, 2)+1} = new_handle;
 
+    % Load dataset
+    new_ts = load_actiwatch(new_file);
+    g_data_ts{size(g_data_ts, 2)+1} = new_ts;
+
+    % Update  screen title
+    set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
+
+    % Update data table
+    datasets = get(handles.uitable_data, 'Data');
+    i = size(datasets, 1) + 1;
+    datasets{i, 1} = 'Main';
+    datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
+    datasets{i, 3} = datestr(min(new_ts.Time));
+    datasets{i, 4} = datestr(max(new_ts.Time));
+    datasets{i, 5} = new_file;
+    set(handles.uitable_data, 'Data', datasets);
+
+    % Update analysis dataset selector
+    nums = {};
+    for i=1:size(g_data_ts, 2),
+        nums{i} = num2str(i);
+    end
+    set(handles.popupmenu_dataset, 'String', nums);
+
+    % Update data plot
+    g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
+    plot_days(g_plot_handle, floor(min(new_ts.Time)), g_plot_subs, g_plot_days, new_ts);
+    update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
+end
 
 % --------------------------------------------------------------------
 function menu_analysis_Callback(hObject, eventdata, handles)
@@ -509,12 +534,32 @@ function pushbutton_update_plots_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global g_data_ts g_plot_subs g_plot_days;
-start = floor(min(g_data_ts.Time));
+
+ts_main = [];
+idx_main = get_plot_index('Main', handles);
+if idx_main > 0,
+    ts_main = g_data_ts{idx_main};
+end
+ts_top = [];
+idx_top = get_plot_index('Top', handles);
+if idx_top > 0,
+    ts_top = g_data_ts{idx_top};
+end
+ts_markup = [];
+idx_markup = get_plot_index('Markup', handles);
+if idx_markup > 0,
+    ts_markup = g_data_ts{idx_markup};
+end
+
+start = floor(min(ts_main.Time));
 sval = get(handles.slider_v, 'Value');
 smax = get(handles.slider_v, 'Max');
 smin = get(handles.slider_v, 'Min');
+
 % fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
-plot_days(handles.uipanel_plot, start + smax - sval, g_plot_subs, g_plot_days, g_data_ts);
+plot_days(handles.uipanel_plot, start + smax - sval,...
+            g_plot_subs, g_plot_days,...
+            ts_main, ts_top, ts_markup);
 
 
 
@@ -570,3 +615,72 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 global g_plot_days;
 set(hObject, 'String', num2str(g_plot_days));
+
+
+% --- Executes on selection change in popupmenu_dataset.
+function popupmenu_dataset_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu_dataset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_dataset contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu_dataset
+
+
+% --- Executes during object creation, after setting all properties.
+function popupmenu_dataset_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu_dataset (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit_main_max_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_main_max (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_main_max as text
+%        str2double(get(hObject,'String')) returns contents of edit_main_max as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_main_max_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_main_max (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit_top_max_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_top_max (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_top_max as text
+%        str2double(get(hObject,'String')) returns contents of edit_top_max as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_top_max_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_top_max (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

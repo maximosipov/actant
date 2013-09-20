@@ -123,7 +123,7 @@ for i = 1:plots,
     end
     % Plot markup
     % TODO - we plot all markup currently, some not visible, but want just a subset
-    if exist('tsm', 'var'),
+    if exist('tsm', 'var') && ~isempty(tsm),
         tvmd = find((tsm.Time > t1-1) & (tsm.Time < t2+1));
         tsmd = getsamples(tsm, tvmd);
         if ~isempty(tsmd.Time),
