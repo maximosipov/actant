@@ -1,6 +1,19 @@
 function [entropy, conf95] = sampen(data, m, r)
 % SAMPEN Calculate SampEn value
 %
+% Description:
+%   The function takes a column vector of data and calculates Sample
+%   Entropy value of order m and similarity r.
+%
+% Arguments:
+%   data - column vector with data
+%   m - pattern length
+%   r - similarity criteria (absolute value)
+%
+% Results:
+%   entropy - Sample Entropy value
+%   conf95 - 95% confidence interval
+%
 % Copyright (C) 2011-2013, Maxim Osipov
 %
 % All rights reserved.
@@ -27,18 +40,6 @@ function [entropy, conf95] = sampen(data, m, r)
 % LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 % OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 % OF THE POSSIBILITY OF SUCH DAMAGE.
-%
-% Description:
-%   The function takes a column vector of data and calculates Sample
-%   Entropy value of order m and similarity r.
-%
-% Arguments:
-%   data - column vector with data
-%   m - pattern length
-%   r - similarity criteria (absolute value)
-%
-% Results:
-%   entropy - Sample Entropy value
 %
 
     len = length(data);

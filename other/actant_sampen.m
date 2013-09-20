@@ -1,19 +1,22 @@
-function [entropy, conf95] = mse(data, m, r, s, cb)
-% MSE Calculate multi scale entropy using SampEn algorithm
+function [ts, markup, vals] = actant_sampen(data, args)
+% ACTANT_SAMPEN Wrapper function for SAMPEN
 %
 % Description:
-%   The function takes a column vector of data and calculates Multi-Scale
-%   Entropy of order m, similarity r and for scales from the s vector.
+%   The function wraps sampen to provide ACTANT compatible interface.
 %
 % Arguments:
-%   data - column vector with data
-%   m - pattern length
-%   r - similarity criteria (% of std)
-%   s - scales vector
-%   cb - callback function to be called after each scale processing
+%   ts - input data timeseries
+%   args - Cell array of arguments
 %
-% Results:
-%   entropy - vector with entropy (length of scales)
+% Results (all optional):
+%   ts - Generated timeseries
+%   markup - Generated data markup
+%   vals - Cell array of results
+%
+% When function called without arguments, array of function arguments and
+% default values is returned in vals, prefixed with method name.
+%
+% See also SAMPEN.
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -43,20 +46,26 @@ function [entropy, conf95] = mse(data, m, r, s, cb)
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
 
-    R = r*std(data);
-    len_orig = length(data);
-    entropy = zeros(1, length(s));
-    conf95 = zeros(1, length(s));
-    for i = 1:length(s),
-        len_coarse = floor(len_orig/s(i));
-        % coarse grain
-        coarse = sum(reshape(...
-            data(1:(len_orig-rem(len_orig,s(i)))),...
-            s(i), len_coarse), 1)'./s(i);
-        % calculate sample entropy
-        [entropy(i), conf95(i)] = sampen(coarse, m, R);
-        if exist('cb', 'var'),
-            cb(length(s),i);
-        end
-    end
+ts = [];
+markup = [];
+vals = {};
+
+% No arguments passed - return arguments definition
+if nargin == 0,
+    vals{1, 1} = 'Method'; vals{1, 2} = 'SampEn';
+    vals{2, 1} = 'm'; vals{2, 2} = '2';
+    vals{3, 1} = 'r'; vals{3, 2} = '0.2';
+    return;
+end
+
+% We had some arguments - perform analysis
+data_arg = data.Data;
+m_arg = str2num(args{2, 2});
+r_arg = str2num(args{3, 2});
+
+[entropy, conf95] = sampen(data_arg, m_arg, r_arg);
+
+vals{1, 1} = 'SampEn'; vals{1, 2} = num2str(entropy); 
+vals{2, 1} = '95% conf. int.'; vals{2, 2} = num2str(conf95); 
+
 end

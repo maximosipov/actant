@@ -17,8 +17,6 @@ function h = plot_days(h, start, plots, days, tsl, tsr, tsm)
 % Results:
 %   h - figure handle
 %
-% See also APPEND_24, SPLIT_24, PLOT_HEAT24.
-%
 % Copyright (C) 2011-2013, Maxim Osipov
 %
 % All rights reserved.

@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 19-Sep-2013 17:24:49
+% Last Modified by GUIDE v2.5 20-Sep-2013 10:52:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -102,6 +102,8 @@ global g_plot_subs;
 global g_plot_days;
 global g_plot_handle;
 
+global g_analysis_func;
+
 g_data_file = '';
 g_data_ts = timeseries;
 g_data_handle = -1;
@@ -109,6 +111,8 @@ g_data_handle = -1;
 g_plot_subs = 5;
 g_plot_days = 1;
 g_plot_handle = -1;
+
+g_analysis_func = [];
 
 update_vslider(handles, 0);
 
@@ -145,34 +149,6 @@ plot_days(g_plot_handle, floor(min(g_data_ts.Time)), g_plot_subs, g_plot_days, g
 update_vslider(handles, 1, floor(min(g_data_ts.Time)), floor(max(g_data_ts.Time)), 1);
 
 
-function update_analysis(handles)
-global g_data_ts g_plot_handle;
-m = round(str2double(get(handles.edit_mse_m, 'String')));
-r = str2double(get(handles.edit_mse_r, 'String'));
-s1 = round(str2double(get(handles.edit_mse_s1, 'String')));
-sn = round(str2double(get(handles.edit_mse_sn, 'String')));
-scales = s1:sn;
-method = get(handles.popupmenu_method, 'Value');
-if method == 1,
-    h = waitbar(0, 'Please wait...');
-    result = mse(g_data_ts.data(:,1), m, r, scales,...
-        @(n,s)waitbar(s/n, h));
-    close(h);
-end
-if get(handles.checkbox_mse_hold, 'Value'),
-    hold on;
-else
-    hold off;
-end
-g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
-plot(g_plot_handle, scales, result);
-title(['Multiscale Entropy (m=' num2str(m) ', r=' num2str(r) ')']);
-xlabel('Scale (minutes)');
-ylabel('SampEn');
-update_vslider(handles, 0);
-update_vslider(handles, 0);
-
-
 % --- Outputs from this function are returned to the command line.
 function varargout = actant_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -182,6 +158,7 @@ function varargout = actant_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
 
 % --- Executes on button press in pushbutton_load.
 function pushbutton_load_Callback(hObject, eventdata, handles)
@@ -271,7 +248,17 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_analyze (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-update_analysis(handles);
+global g_data_ts g_analysis_func;
+analysis_args = get(handles.uitable_analysis, 'Data');
+
+h = waitbar(0, 'Please wait while analysis completes...');
+[~, ~, analysis_vals] = g_analysis_func(g_data_ts, analysis_args);
+waitbar(1, h);
+close(h);
+
+res = cat(1, analysis_args, analysis_vals);
+set(handles.uitable_analysis, 'Data', res);
+
 
 % --- Executes on button press in pushbutton_save.
 function pushbutton_save_Callback(hObject, eventdata, handles)
@@ -492,10 +479,14 @@ function menu_analysis_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function menu_analysis_mse_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_analysis_mse (see GCBO)
+function menu_analysis_sampen_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_analysis_sampen (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global g_analysis_func;
+g_analysis_func = @actant_sampen;
+[~, ~, sampen_args] = g_analysis_func();
+set(handles.uitable_analysis, 'Data', sampen_args);
 
 
 % --------------------------------------------------------------------
