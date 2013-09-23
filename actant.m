@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 23-Sep-2013 16:10:55
+% Last Modified by GUIDE v2.5 23-Sep-2013 16:33:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,6 +103,8 @@ global g_data_handle;
 global g_plot_subs;
 global g_plot_days;
 global g_plot_handle;
+global g_main_lim;
+global g_top_lim;
 
 global g_analysis_func;
 
@@ -119,6 +121,8 @@ g_data_handle = [];
 g_plot_subs = 5;
 g_plot_days = 1;
 g_plot_handle = -1;
+g_main_lim = [];
+g_top_lim = [];
 
 g_analysis_func = [];
 
@@ -237,7 +241,7 @@ function slider_v_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-global g_data_ts g_plot_subs g_plot_days;
+global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
 
 ts_main = [];
 idx_main = get_plot_index('Main', handles);
@@ -263,7 +267,8 @@ smin = get(hObject, 'Min');
 % fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
 plot_days(handles.uipanel_plot, start + smax - sval,...
             g_plot_subs, g_plot_days,...
-            ts_main, ts_top, ts_markup);
+            ts_main, ts_top, ts_markup,...
+            g_main_lim, g_top_lim);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -290,7 +295,7 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_open (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days g_file_types;
+global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days g_file_types g_main_lim;
 [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
 if fp == 0,
     return;
@@ -339,9 +344,17 @@ for i=1:size(g_data_ts, 2),
 end
 set(handles.popupmenu_dataset, 'String', nums);
 
+% Update limits
+g_main_lim = [min(min(new_ts.Data)) max(max(new_ts.Data))];
+set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
+set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+
 % Update data plot
 g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
-plot_days(g_plot_handle, floor(min(new_ts.Time)), g_plot_subs, g_plot_days, new_ts);
+plot_days(g_plot_handle, floor(min(new_ts.Time)),...
+    g_plot_subs, g_plot_days,...
+    new_ts, [], [],...
+    g_main_lim, []);
 update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
 
 
@@ -375,17 +388,37 @@ function pushbutton_update_plots_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_update_plots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_ts g_plot_subs g_plot_days;
+global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
 
 ts_main = [];
 idx_main = get_plot_index('Main', handles);
 if idx_main > 0,
     ts_main = g_data_ts{idx_main};
+    % Update limits
+    main_min = get(handles.edit_main_min, 'String');
+    main_max = get(handles.edit_main_max, 'String');
+    if isempty(main_min) || isempty(main_max),
+        g_main_lim = [min(min(ts_main.Data)) max(max(ts_main.Data))];
+        set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
+        set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+    else
+        g_main_lim = [str2num(main_min) str2num(main_max)];
+    end
 end
 ts_top = [];
 idx_top = get_plot_index('Top', handles);
 if idx_top > 0,
     ts_top = g_data_ts{idx_top};
+    % Update limits
+    top_min = get(handles.edit_top_min, 'String');
+    top_max = get(handles.edit_top_max, 'String');
+    if isempty(top_min) || isempty(top_max),
+        g_top_lim = [min(min(ts_top.Data)) max(max(ts_top.Data))];
+        set(handles.edit_top_min, 'String', num2str(g_top_lim(1)));
+        set(handles.edit_top_max, 'String', num2str(g_top_lim(2)));
+    else
+        g_top_lim = [str2num(top_min) str2num(top_max)];
+    end
 end
 ts_markup = [];
 idx_markup = get_plot_index('Markup', handles);
@@ -401,7 +434,8 @@ smin = get(handles.slider_v, 'Min');
 % fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
 plot_days(handles.uipanel_plot, start + smax - sval,...
             g_plot_subs, g_plot_days,...
-            ts_main, ts_top, ts_markup);
+            ts_main, ts_top, ts_markup,...
+            [g_main_lim], [g_top_lim]);
 
 
 function edit_plots_Callback(hObject, eventdata, handles)
@@ -552,3 +586,49 @@ function menu_rhythm_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_rhythm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+function edit_main_min_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_main_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_main_min as text
+%        str2double(get(hObject,'String')) returns contents of edit_main_min as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_main_min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_main_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit_top_min_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_top_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_top_min as text
+%        str2double(get(hObject,'String')) returns contents of edit_top_min as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_top_min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_top_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

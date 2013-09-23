@@ -1,4 +1,4 @@
-function h = plot_days(h, start, plots, days, tsl, tsr, tsm)
+function h = plot_days(h, start, plots, days, tsl, tsr, tsm, liml, limr)
 % PLOT_2x24 Plot actimetry and light data on 24 hours multi-day plot
 %
 % Description:
@@ -13,6 +13,8 @@ function h = plot_days(h, start, plots, days, tsl, tsr, tsm)
 %   tsl - timeseries for left axis
 %   tsr - timeseries for right axis (optional)
 %   tsm - timeseries for markup (optional)
+%   liml - left limits [low high] (optional)
+%   limr - right limits [low high] (optional)
 %
 % Results:
 %   h - figure handle
@@ -60,9 +62,17 @@ end
 if nargin < 4,
     error('Not enough arguments');
 end
-lylim = [min(min(tsl.Data)) max(max(tsl.Data))];
+if ~exist('liml', 'var') || isempty(liml),
+    lylim = [min(min(tsl.Data)) max(max(tsl.Data))];
+else
+    lylim = liml;
+end
 if exist('tsr', 'var') && ~isempty(tsr),
-    rylim = [min(min(tsr.Data)) max(max(tsr.Data))];
+    if ~exist('limr', 'var') || isempty(limr),
+        rylim = [min(min(tsr.Data)) max(max(tsr.Data))];
+    else
+        rylim = limr;
+    end
 end
 
 
