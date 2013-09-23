@@ -91,9 +91,9 @@ for i = 1:plots,
             set(AX, 'XTickLabel', '');
         end
         set(get(AX,'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
-        set(AX,'YColor','b');
-        set(H1,'EdgeColor','b');
-        set(H1,'FaceColor','b');
+        set(AX,'YColor','k');
+        set(H1,'EdgeColor','k');
+        set(H1,'FaceColor','k');
         title(datestr(t1));
     else
         % Plot double axes
@@ -122,11 +122,11 @@ for i = 1:plots,
         end
         set(get(AX(1),'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
         set(get(AX(2),'Ylabel'),'String', [tsr.Name ' (' tsr.DataInfo.Units ')']);
-        set(AX(1),'YColor','b');
+        set(AX(1),'YColor','k');
         set(AX(2),'YColor','r');
         set(AX(2),'YDir','reverse');
-        set(H1,'EdgeColor','b');
-        set(H1,'FaceColor','b');
+        set(H1,'EdgeColor','k');
+        set(H1,'FaceColor','k');
         set(H2,'Color','r');
         title(datestr(t1));
     end

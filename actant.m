@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 20-Sep-2013 17:08:57
+% Last Modified by GUIDE v2.5 23-Sep-2013 16:10:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -184,7 +184,6 @@ function PrintMenuItem_Callback(hObject, eventdata, handles)
 % hObject    handle to PrintMenuItem (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-printdlg(handles.figure_main)
 
 % --------------------------------------------------------------------
 function CloseMenuItem_Callback(hObject, eventdata, handles)
@@ -347,15 +346,15 @@ update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
 
 
 % --------------------------------------------------------------------
-function menu_analysis_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_analysis (see GCBO)
+function menu_entropy_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_entropy (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
 % --------------------------------------------------------------------
-function menu_analysis_sampen_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_analysis_sampen (see GCBO)
+function menu_entropy_sampen_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_entropy_sampen (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global g_analysis_func;
@@ -365,8 +364,8 @@ set(handles.uitable_analysis, 'Data', sampen_args);
 
 
 % --------------------------------------------------------------------
-function menu_file_save_as_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_file_save_as (see GCBO)
+function menu_file_convert_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -524,3 +523,32 @@ function edit_top_max_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --------------------------------------------------------------------
+function menu_file_print_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file_print (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+printdlg;
+
+
+% --------------------------------------------------------------------
+function menu_sleep_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_wake_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_wake (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_rhythm_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_rhythm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
