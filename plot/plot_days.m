@@ -45,8 +45,17 @@ function h = plot_days(h, start, plots, days, tsl, tsr, tsm)
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
 
+hw = waitbar(0, 'Please wait while the plot is updated...');
+
+
 if ~exist('h', 'var'),
     h = figure;
+else
+    f = h;
+    while ~isempty(f) & ~strcmp('figure', get(f,'type')),
+        f = get(f,'parent');
+    end
+    set(0, 'currentfigure', f);
 end
 if nargin < 4,
     error('Not enough arguments');
@@ -137,4 +146,9 @@ for i = 1:plots,
             xlim([t1 t2]);
         end
     end
+    waitbar(i/plots, hw);
 end
+
+waitbar(1, hw);
+close(hw);
+

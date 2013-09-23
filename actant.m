@@ -94,6 +94,8 @@ addpath('./rhythm');
 addpath('./other');
 addpath('./plot');
 
+global g_file_types;
+
 global g_data_file;
 global g_data_ts;
 global g_data_handle;
@@ -103,6 +105,12 @@ global g_plot_days;
 global g_plot_handle;
 
 global g_analysis_func;
+
+g_file_types = {
+    '*.awd', 'Actiwatch-L text files (*.awd)';...
+    '*.csv', 'GENEActiv CSV files (*.csv)';...
+    '*.csv', 'Actopsy CSV files (*.csv)'
+    };
 
 g_data_file = {};
 g_data_ts = {};
@@ -283,49 +291,60 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_open (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days;
-[fn, fp] = uigetfile('*.*', 'Select the data file');
-if fp ~= 0,
-    % Get and open data file
-    new_file = [fp fn];
-    new_handle = fopen(new_file, 'r');
-    if new_handle == -1,
-        warndlg(['Could not open file' new_file]);
-        return;
-    end
-    
-    g_data_file{size(g_data_file, 2)+1} = new_file;
-    g_data_handle{size(g_data_handle, 2)+1} = new_handle;
-
-    % Load dataset
-    new_ts = load_actiwatch(new_file);
-    g_data_ts{size(g_data_ts, 2)+1} = new_ts;
-
-    % Update  screen title
-    set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
-
-    % Update data table
-    datasets = get(handles.uitable_data, 'Data');
-    i = size(datasets, 1) + 1;
-    datasets{i, 1} = 'Main';
-    datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
-    datasets{i, 3} = datestr(min(new_ts.Time));
-    datasets{i, 4} = datestr(max(new_ts.Time));
-    datasets{i, 5} = new_file;
-    set(handles.uitable_data, 'Data', datasets);
-
-    % Update analysis dataset selector
-    nums = {};
-    for i=1:size(g_data_ts, 2),
-        nums{i} = num2str(i);
-    end
-    set(handles.popupmenu_dataset, 'String', nums);
-
-    % Update data plot
-    g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
-    plot_days(g_plot_handle, floor(min(new_ts.Time)), g_plot_subs, g_plot_days, new_ts);
-    update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
+global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days g_file_types;
+[fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
+if fp == 0,
+    return;
 end
+
+% Get and open data file
+new_file = [fp fn];
+new_handle = fopen(new_file, 'r');
+if new_handle == -1,
+    warndlg(['Could not open file' new_file]);
+    return;
+end
+g_data_file{size(g_data_file, 2)+1} = new_file;
+g_data_handle{size(g_data_handle, 2)+1} = new_handle;
+
+% Load dataset
+h = waitbar(0, 'Please wait while the data is loaded...');
+if fi == 1,
+    new_ts = load_actiwatch(new_file);
+elseif fi == 2,
+    new_ts = load_geneactiv(new_file);
+else
+    new_ts = load_actopsy(new_file);
+end
+waitbar(1, h);
+close(h);
+g_data_ts{size(g_data_ts, 2)+1} = new_ts;
+
+% Update  screen title
+set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
+
+% Update data table
+datasets = get(handles.uitable_data, 'Data');
+i = size(datasets, 1) + 1;
+datasets{i, 1} = 'Main';
+datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
+datasets{i, 3} = datestr(min(new_ts.Time));
+datasets{i, 4} = datestr(max(new_ts.Time));
+datasets{i, 5} = new_file;
+set(handles.uitable_data, 'Data', datasets);
+
+% Update analysis dataset selector
+nums = {};
+for i=1:size(g_data_ts, 2),
+    nums{i} = num2str(i);
+end
+set(handles.popupmenu_dataset, 'String', nums);
+
+% Update data plot
+g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
+plot_days(g_plot_handle, floor(min(new_ts.Time)), g_plot_subs, g_plot_days, new_ts);
+update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
+
 
 % --------------------------------------------------------------------
 function menu_analysis_Callback(hObject, eventdata, handles)
