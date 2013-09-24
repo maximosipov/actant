@@ -32,7 +32,7 @@ function [sleep, data] = sleepscoring(counts, timeStamps, onsetTime, offsetTime,
 %   counts - N-by-1 column vector of count data of 1 day between 12:00-12:00
 %   timeStamps - N-by-1 series with time stamps [datenums]
 %   onsetTime - datenum of 'in bed time' or 'lights off time' 
-%   goffsetTime - datenum of 'out of bed time' or 'final wake time'
+%   offsetTime - datenum of 'out of bed time' or 'final wake time'
 %   epoch - epoch length (s): 
 %       15s (default), 30s, 60s, 120
 %   sensitivity - sensitivity of algorithm: 

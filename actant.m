@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 23-Sep-2013 16:33:24
+% Last Modified by GUIDE v2.5 24-Sep-2013 13:04:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -632,3 +632,35 @@ function edit_top_min_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --------------------------------------------------------------------
+function menu_entropy_mse_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_entropy_mse (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_rhythm_nonparam (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_wake_bins_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_wake_bins (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_sleep_scoring_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_scoring (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global g_analysis_func;
+g_analysis_func = @actant_sleepscoring;
+[~, ~, sleepscoring_args] = g_analysis_func();
+set(handles.uitable_analysis, 'Data', sleepscoring_args);
