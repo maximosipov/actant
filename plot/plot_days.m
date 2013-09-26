@@ -55,9 +55,10 @@ if ~exist('h', 'var'),
 else
     f = h;
     while ~isempty(f) & ~strcmp('figure', get(f,'type')),
-        f = get(f,'parent');
+        f = get(f, 'parent');
     end
     set(0, 'currentfigure', f);
+    set(f, 'Renderer', 'zbuffer');
 end
 if nargin < 4,
     error('Not enough arguments');
@@ -77,8 +78,8 @@ end
 
 
 for i = 1:plots,
-    subplot_tight(plots, 1, i, [0.05 0.05]);
-%    subplot(plots, 1, i);
+    ah = subplot_tight(plots, 1, i, [0.05 0.05]);
+%    ah = subplot(plots, 1, i);
     % Get data subset
     t1 = floor(start + i - 1);
     t2 = floor(start + i + days - 1);
@@ -92,7 +93,7 @@ for i = 1:plots,
     end
     if ~exist('tsr', 'var') || isempty(tsr),
         % Plot single axes
-        H1 = area(tsld_t, tsld_d);
+        H1 = area(ah, tsld_t, tsld_d);
         AX = gca;
         xlim(AX, [t1 t2]);
         ylim(AX, lylim);
@@ -115,7 +116,7 @@ for i = 1:plots,
             tsrd_t = [t1];
             tsrd_d = [NaN];
         end
-        [AX,H1,H2] = plotyy(tsld_t, tsld_d,...
+        [AX,H1,H2] = plotyy(ah, tsld_t, tsld_d,...
                             tsrd_t, tsrd_d,...
                             'area', 'plot');
         xlim(AX(1), [t1 t2]);
@@ -154,6 +155,7 @@ for i = 1:plots,
             set(H, 'edgecolor', 'none');
             uistack(H, 'bottom');
             xlim([t1 t2]);
+            set(H, 'Clipping', 'on');
         end
     end
     waitbar(i/plots, hw);

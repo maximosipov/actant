@@ -168,6 +168,14 @@ function add_dataset(new_ts, new_name, new_show, handles)
     set(handles.uitable_data, 'Data', datasets);
 
 
+function setup_analysis(func, handles)
+    global g_analysis_func;
+    g_analysis_func = func;
+    [~, ~, args] = g_analysis_func();
+    set(handles.uitable_analysis, 'Data', args);
+
+
+
 % --- Outputs from this function are returned to the command line.
 function varargout = actant_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -222,27 +230,27 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_analyze (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_ts g_analysis_func;
-analysis_args = get(handles.uitable_analysis, 'Data');
-n = get(handles.popupmenu_dataset, 'Value');
+    global g_data_ts g_analysis_func;
+    analysis_args = get(handles.uitable_analysis, 'Data');
+    n = get(handles.popupmenu_dataset, 'Value');
 
-if isempty(g_analysis_func),
-    errordlg('Please select analysis method!');
-    return;
-end
+    if isempty(g_analysis_func),
+        errordlg('Please select analysis method!');
+        return;
+    end
 
-h = waitbar(0, 'Please wait while analysis completes...');
-[ts, markup, vals] = g_analysis_func(g_data_ts{n}, analysis_args);
-waitbar(1, h);
-close(h);
+    h = waitbar(0, 'Please wait while analysis completes...');
+    [ts, markup, vals] = g_analysis_func(g_data_ts{n}, analysis_args);
+    waitbar(1, h);
+    close(h);
 
-if ~isempty(ts),
-    add_dataset(ts, analysis_args{1,2}, 'Top', handles);
-end
-if ~isempty(markup),
-    add_dataset(markup, analysis_args{1,2}, 'Markup', handles);
-end
-set(handles.uitable_results, 'Data', vals);
+    if ~isempty(ts),
+        add_dataset(ts, analysis_args{1,2}, 'Top', handles);
+    end
+    if ~isempty(markup),
+        add_dataset(markup, analysis_args{1,2}, 'Markup', handles);
+    end
+    set(handles.uitable_results, 'Data', vals);
 
 
 % --- Executes on button press in pushbutton_save.
@@ -260,34 +268,32 @@ function slider_v_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
+    global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
 
-ts_main = [];
-idx_main = get_plot_index('Main', handles);
-if idx_main > 0,
-    ts_main = g_data_ts{idx_main};
-end
-ts_top = [];
-idx_top = get_plot_index('Top', handles);
-if idx_top > 0,
-    ts_top = g_data_ts{idx_top};
-end
-ts_markup = [];
-idx_markup = get_plot_index('Markup', handles);
-if idx_markup > 0,
-    ts_markup = g_data_ts{idx_markup};
-end
+    ts_main = [];
+    idx_main = get_plot_index('Main', handles);
+    if idx_main > 0,
+        ts_main = g_data_ts{idx_main};
+    end
+    ts_top = [];
+    idx_top = get_plot_index('Top', handles);
+    if idx_top > 0,
+        ts_top = g_data_ts{idx_top};
+    end
+    ts_markup = [];
+    idx_markup = get_plot_index('Markup', handles);
+    if idx_markup > 0,
+        ts_markup = g_data_ts{idx_markup};
+    end
 
-start = floor(min(ts_main.Time));
-sval = get(hObject, 'Value');
-smax = get(hObject, 'Max');
-smin = get(hObject, 'Min');
-
-% fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
-plot_days(handles.uipanel_plot, start + smax - sval,...
-            g_plot_subs, g_plot_days,...
-            ts_main, ts_top, ts_markup,...
-            g_main_lim, g_top_lim);
+    start = floor(min(ts_main.Time));
+    sval = get(hObject, 'Value');
+    smax = get(hObject, 'Max');
+    smin = get(hObject, 'Min');
+    plot_days(handles.uipanel_plot, start + smax - sval,...
+                g_plot_subs, g_plot_days,...
+                ts_main, ts_top, ts_markup,...
+                g_main_lim, g_top_lim);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -314,59 +320,59 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_open (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days g_file_types g_main_lim;
-[fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
-if fp == 0,
-    return;
-end
+    global g_data_handle g_data_file g_data_ts g_plot_handle g_plot_subs g_plot_days g_file_types g_main_lim;
+    [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
+    if fp == 0,
+        return;
+    end
 
-% Get and open data file
-new_file = [fp fn];
-new_handle = fopen(new_file, 'r');
-if new_handle == -1,
-    warndlg(['Could not open file' new_file]);
-    return;
-end
-g_data_file{size(g_data_file, 2)+1} = new_file;
-g_data_handle{size(g_data_handle, 2)+1} = new_handle;
+    % Get and open data file
+    new_file = [fp fn];
+    new_handle = fopen(new_file, 'r');
+    if new_handle == -1,
+        warndlg(['Could not open file' new_file]);
+        return;
+    end
+    g_data_file{size(g_data_file, 2)+1} = new_file;
+    g_data_handle{size(g_data_handle, 2)+1} = new_handle;
 
-% Load dataset
-h = waitbar(0, 'Please wait while the data is loaded...');
-if fi == 1,
-    new_ts = load_actiwatch(new_file);
-elseif fi == 2,
-    new_ts = load_geneactiv(new_file);
-else
-    new_ts = load_actopsy(new_file);
-end
-waitbar(1, h);
-close(h);
+    % Load dataset
+    h = waitbar(0, 'Please wait while the data is loaded...');
+    if fi == 1,
+        new_ts = load_actiwatch(new_file);
+    elseif fi == 2,
+        new_ts = load_geneactiv(new_file);
+    else
+        new_ts = load_actopsy(new_file);
+    end
+    waitbar(1, h);
+    close(h);
 
-% Update  screen title
-set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
+    % Update  screen title
+    set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
 
-% Update data table
-add_dataset(new_ts, new_file, 'Main', handles);
+    % Update data table
+    add_dataset(new_ts, new_file, 'Main', handles);
 
-% Update analysis dataset selector
-nums = {};
-for i=1:size(g_data_ts, 2),
-    nums{i} = num2str(i);
-end
-set(handles.popupmenu_dataset, 'String', nums);
+    % Update analysis dataset selector
+    nums = {};
+    for i=1:size(g_data_ts, 2),
+        nums{i} = num2str(i);
+    end
+    set(handles.popupmenu_dataset, 'String', nums);
 
-% Update limits
-g_main_lim = [min(min(new_ts.Data)) max(max(new_ts.Data))];
-set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
-set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+    % Update limits
+    g_main_lim = [min(min(new_ts.Data)) max(max(new_ts.Data))];
+    set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
+    set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
 
-% Update data plot
-g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
-plot_days(g_plot_handle, floor(min(new_ts.Time)),...
-    g_plot_subs, g_plot_days,...
-    new_ts, [], [],...
-    g_main_lim, []);
-update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
+    % Update data plot
+    g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
+    plot_days(g_plot_handle, floor(min(new_ts.Time)),...
+        g_plot_subs, g_plot_days,...
+        new_ts, [], [],...
+        g_main_lim, []);
+    update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
 
 
 % --------------------------------------------------------------------
@@ -381,10 +387,7 @@ function menu_entropy_sampen_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_entropy_sampen (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_analysis_func;
-g_analysis_func = @actant_sampen;
-[~, ~, args] = g_analysis_func();
-set(handles.uitable_analysis, 'Data', args);
+setup_analysis(@actant_sampen, handles)
 
 
 % --------------------------------------------------------------------
@@ -399,54 +402,54 @@ function pushbutton_update_plots_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_update_plots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
+    global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
 
-ts_main = [];
-idx_main = get_plot_index('Main', handles);
-if idx_main > 0,
-    ts_main = g_data_ts{idx_main};
-    % Update limits
-    main_min = get(handles.edit_main_min, 'String');
-    main_max = get(handles.edit_main_max, 'String');
-    if isempty(main_min) || isempty(main_max),
-        g_main_lim = [min(min(ts_main.Data)) max(max(ts_main.Data))];
-        set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
-        set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
-    else
-        g_main_lim = [str2num(main_min) str2num(main_max)];
+    ts_main = [];
+    idx_main = get_plot_index('Main', handles);
+    if idx_main > 0,
+        ts_main = g_data_ts{idx_main};
+        % Update limits
+        main_min = get(handles.edit_main_min, 'String');
+        main_max = get(handles.edit_main_max, 'String');
+        if isempty(main_min) || isempty(main_max),
+            g_main_lim = [min(min(ts_main.Data)) max(max(ts_main.Data))];
+            set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
+            set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+        else
+            g_main_lim = [str2num(main_min) str2num(main_max)];
+        end
     end
-end
-ts_top = [];
-idx_top = get_plot_index('Top', handles);
-if idx_top > 0,
-    ts_top = g_data_ts{idx_top};
-    % Update limits
-    top_min = get(handles.edit_top_min, 'String');
-    top_max = get(handles.edit_top_max, 'String');
-    if isempty(top_min) || isempty(top_max),
-        g_top_lim = [min(min(ts_top.Data)) max(max(ts_top.Data))];
-        set(handles.edit_top_min, 'String', num2str(g_top_lim(1)));
-        set(handles.edit_top_max, 'String', num2str(g_top_lim(2)));
-    else
-        g_top_lim = [str2num(top_min) str2num(top_max)];
+    ts_top = [];
+    idx_top = get_plot_index('Top', handles);
+    if idx_top > 0,
+        ts_top = g_data_ts{idx_top};
+        % Update limits
+        top_min = get(handles.edit_top_min, 'String');
+        top_max = get(handles.edit_top_max, 'String');
+        if isempty(top_min) || isempty(top_max),
+            g_top_lim = [min(min(ts_top.Data)) max(max(ts_top.Data))];
+            set(handles.edit_top_min, 'String', num2str(g_top_lim(1)));
+            set(handles.edit_top_max, 'String', num2str(g_top_lim(2)));
+        else
+            g_top_lim = [str2num(top_min) str2num(top_max)];
+        end
     end
-end
-ts_markup = [];
-idx_markup = get_plot_index('Markup', handles);
-if idx_markup > 0,
-    ts_markup = g_data_ts{idx_markup};
-end
+    ts_markup = [];
+    idx_markup = get_plot_index('Markup', handles);
+    if idx_markup > 0,
+        ts_markup = g_data_ts{idx_markup};
+    end
 
-start = floor(min(ts_main.Time));
-sval = get(handles.slider_v, 'Value');
-smax = get(handles.slider_v, 'Max');
-smin = get(handles.slider_v, 'Min');
+    start = floor(min(ts_main.Time));
+    sval = get(handles.slider_v, 'Value');
+    smax = get(handles.slider_v, 'Max');
+    smin = get(handles.slider_v, 'Min');
 
-% fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
-plot_days(handles.uipanel_plot, start + smax - sval,...
-            g_plot_subs, g_plot_days,...
-            ts_main, ts_top, ts_markup,...
-            [g_main_lim], [g_top_lim]);
+    % fprintf(1, ['Min: ' num2str(smin) ' Val: ' num2str(sval) ' Max:' num2str(smax) '\n']);
+    plot_days(handles.uipanel_plot, start + smax - sval,...
+                g_plot_subs, g_plot_days,...
+                ts_main, ts_top, ts_markup,...
+                [g_main_lim], [g_top_lim]);
 
 
 function edit_plots_Callback(hObject, eventdata, handles)
@@ -456,9 +459,9 @@ function edit_plots_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_plots as text
 %        str2double(get(hObject,'String')) returns contents of edit_plots as a double
-global g_plot_subs;
-val = get(hObject, 'String');
-g_plot_subs = str2num(val);
+    global g_plot_subs;
+    val = get(hObject, 'String');
+    g_plot_subs = str2num(val);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -472,8 +475,8 @@ function edit_plots_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-global g_plot_subs;
-set(hObject, 'String', num2str(g_plot_subs));
+    global g_plot_subs;
+    set(hObject, 'String', num2str(g_plot_subs));
 
 
 function edit_days_Callback(hObject, eventdata, handles)
@@ -483,9 +486,9 @@ function edit_days_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_days as text
 %        str2double(get(hObject,'String')) returns contents of edit_days as a double
-global g_plot_days;
-val = get(hObject, 'String');
-g_plot_days = str2num(val);
+    global g_plot_days;
+    val = get(hObject, 'String');
+    g_plot_days = str2num(val);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -499,8 +502,8 @@ function edit_days_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-global g_plot_days;
-set(hObject, 'String', num2str(g_plot_days));
+    global g_plot_days;
+    set(hObject, 'String', num2str(g_plot_days));
 
 
 % --- Executes on selection change in popupmenu_dataset.
@@ -575,7 +578,7 @@ function menu_file_print_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_print (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-printdlg;
+    printdlg;
 
 
 % --------------------------------------------------------------------
@@ -650,10 +653,7 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_entropy_mse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_analysis_func;
-g_analysis_func = @actant_mse;
-[~, ~, args] = g_analysis_func();
-set(handles.uitable_analysis, 'Data', args);
+    setup_analysis(@actant_mse, handles)
 
 
 % --------------------------------------------------------------------
@@ -661,10 +661,7 @@ function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_rhythm_nonparam (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_analysis_func;
-g_analysis_func = @actant_activity;
-[~, ~, args] = g_analysis_func();
-set(handles.uitable_analysis, 'Data', args);
+    setup_analysis(@actant_activity, handles)
 
 
 % --------------------------------------------------------------------
@@ -679,7 +676,4 @@ function menu_sleep_scoring_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_sleep_scoring (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global g_analysis_func;
-g_analysis_func = @actant_sleepscoring;
-[~, ~, args] = g_analysis_func();
-set(handles.uitable_analysis, 'Data', args);
+    setup_analysis(@actant_sleepscoring, handles)
