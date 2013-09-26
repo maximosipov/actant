@@ -77,9 +77,11 @@ if exist('tsr', 'var') && ~isempty(tsr),
 end
 
 
+%ahs = tight_subplot(plots, 1, 0.005, 0.01, 0.01);
 for i = 1:plots,
-    ah = subplot_tight(plots, 1, i, [0.05 0.05]);
+%    ah = ahs(i);
 %    ah = subplot(plots, 1, i);
+    ah = subplot_tight(plots, 1, i, [0.005 0.01]);
     % Get data subset
     t1 = floor(start + i - 1);
     t2 = floor(start + i + days - 1);
@@ -101,11 +103,17 @@ for i = 1:plots,
         if (i < plots),
             set(AX, 'XTickLabel', '');
         end
-        set(get(AX,'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
+%        set(get(AX,'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
+        set(AX, 'YTickLabel', '');
         set(AX,'YColor','k');
         set(H1,'EdgeColor','k');
         set(H1,'FaceColor','k');
-        title(datestr(t1));
+        h = text((t1+t2)/2, (lylim(1)+lylim(2))/2,...
+            [datestr(t1) ' - ' datestr(t2-1)],...
+            'Color', [0.5 0.5 0.5],...
+            'VerticalAlignment', 'middle',...
+            'HorizontalAlignment', 'center');
+        uistack(h, 'top');
     else
         % Plot double axes
         tvrd = find((tsr.Time > t1) & (tsr.Time < t2));
@@ -131,15 +139,22 @@ for i = 1:plots,
             set(AX(1), 'XTickLabel', '');
             set(AX(2), 'XTickLabel', '');
         end
-        set(get(AX(1),'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
-        set(get(AX(2),'Ylabel'),'String', [tsr.Name ' (' tsr.DataInfo.Units ')']);
+%        set(get(AX(1),'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
+%        set(get(AX(2),'Ylabel'),'String', [tsr.Name ' (' tsr.DataInfo.Units ')']);
+        set(AX(1), 'YTickLabel', '');
+        set(AX(2), 'YTickLabel', '');
         set(AX(1),'YColor','k');
         set(AX(2),'YColor','r');
         set(AX(2),'YDir','reverse');
         set(H1,'EdgeColor','k');
         set(H1,'FaceColor','k');
         set(H2,'Color','r');
-        title(datestr(t1));
+        h = text((t1+t2)/2, (lylim(1)+lylim(2))/2,...
+            [datestr(t1) ' - ' datestr(t2-1)],...
+            'Color', [0.5 0.5 0.5],...
+            'VerticalAlignment', 'middle',...
+            'HorizontalAlignment', 'center');
+        uistack(h, 'top');
     end
     % Plot markup
     % TODO - we plot all markup currently, some not visible, but want just a subset

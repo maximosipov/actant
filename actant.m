@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 24-Sep-2013 13:04:23
+% Last Modified by GUIDE v2.5 26-Sep-2013 15:22:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -349,7 +349,7 @@ function menu_file_open_Callback(hObject, eventdata, handles)
     close(h);
 
     % Update  screen title
-    set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
+    set(handles.uipanel_plot, 'Title', new_file);
 
     % Update data table
     add_dataset(new_ts, new_file, 'Main', handles);
@@ -403,6 +403,12 @@ function pushbutton_update_plots_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global g_data_ts g_plot_subs g_plot_days g_main_lim g_top_lim;
+
+    % update number of plots and days
+    val = get(handles.edit_plots, 'String');
+    g_plot_subs = str2num(val);
+    val = get(handles.edit_days, 'String');
+    g_plot_days = str2num(val);
 
     ts_main = [];
     idx_main = get_plot_index('Main', handles);
@@ -459,9 +465,6 @@ function edit_plots_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_plots as text
 %        str2double(get(hObject,'String')) returns contents of edit_plots as a double
-    global g_plot_subs;
-    val = get(hObject, 'String');
-    g_plot_subs = str2num(val);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -475,8 +478,6 @@ function edit_plots_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-    global g_plot_subs;
-    set(hObject, 'String', num2str(g_plot_subs));
 
 
 function edit_days_Callback(hObject, eventdata, handles)
@@ -486,9 +487,6 @@ function edit_days_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_days as text
 %        str2double(get(hObject,'String')) returns contents of edit_days as a double
-    global g_plot_days;
-    val = get(hObject, 'String');
-    g_plot_days = str2num(val);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -502,8 +500,6 @@ function edit_days_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-    global g_plot_days;
-    set(hObject, 'String', num2str(g_plot_days));
 
 
 % --- Executes on selection change in popupmenu_dataset.
@@ -677,3 +673,31 @@ function menu_sleep_scoring_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     setup_analysis(@actant_sleepscoring, handles)
+
+
+% --------------------------------------------------------------------
+function menu_convert_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_convert (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_convert_geneactiv_mean_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_convert_geneactiv_mean (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_convert_geneactiv_counts_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_convert_geneactiv_counts (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_convert_actopsy_mean_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_convert_actopsy_mean (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
