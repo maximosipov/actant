@@ -1,5 +1,21 @@
-function [is, iv, m10, l5, ra] = activity(data, sampling)
+function [is, iv, l5, m10, ra] = activity(ts, ts_l5, ts_m10)
 % ACTIVITY Returns array of rest/activity characteristics
+%
+% Description:
+%   The function takes a column vector of data (should be adjusted to 24 
+%   hours) and calculates M10, L5, RA, IS and IV activity characteristics.
+%
+%   Arguments:
+%     ts - timeseries of data
+%
+%   Results:
+%     is - inter-daily stability
+%     iv - intra-daily variability
+%     l5 - average level at 5 least active hours
+%     m10 - average level at 10 most active hours
+%     ra - relative amplitude ra = (m10-l5)/(m10+l5)
+%
+% See also L5M10.
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -28,53 +44,52 @@ function [is, iv, m10, l5, ra] = activity(data, sampling)
 % OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% Description:
-%   The function takes a column vector of data (should be adjusted to 24 
-%   hours) and calculates M10, L5, RA, IS and IV activity characteristics.
-%
-%   Arguments:
-%     data - 24 hours adjusted column vector of data
-%     sampling - sampling rate in minutes
-%
-%   Results:
-%     m10 - 10 most active hours
-%     l5 - 5 least active hours
-%     ra - relative amplitude ra = (m10-l5)/(m10+l5)
-%     is - inter-daily stability
-%     iv - intra-daily variability
-%
-% See also SPLIT_24.
 
-    % check input arguments
-    if fix(length(data)/(24*60/sampling)) < 2,
-        error('DATA shall cover at least 2 days!');
+% resample to 1 minute
+t_start = ceil(min(ts.Time)*24*60)/(24*60);
+t_end = floor(max(ts.Time)*24*60)/(24*60);
+ts_rs = resample(ts, linspace(t_start, t_end, (t_end-t_start)*24*60));
+
+% create periodogram (skip first and last days as it may be incomplete)
+t_start = ceil(min(ts_rs.Time));
+t_end = floor(max(ts_rs.Time));
+data24 = zeros(24*60, t_end-t_start);
+for i=t_start:t_end-1,
+    idx = find((ts_rs.Time >= i) & (ts_rs.Time < i+1));
+    ts_24 = getsamples(ts_rs, idx);
+    data24(:,i-t_start+1) = ts_24.Data;
+end
+
+% IS
+n = size(data24, 1)*size(data24, 2);
+p = size(data24, 2);
+m = mean(mean(data24));
+is = (n*sum((mean(data24,1)-m).^2))/...
+        (p*sum(sum((data24-m).^2)));
+
+% TODO: IV WRONG!!! See van Someren
+n = length(ts_rs.Data);
+iv = (n*sum((ts_rs.Data(2:n)-ts_rs.Data(1:n-1)).^2))/...
+        ((n-1)*sum((ts_rs.Data-mean(ts_rs.Data)).^2));
+
+if nargin == 3,
+    % L5
+    l5_v = zeros(length(ts_l5.Time), 1);
+    for i=1:length(l5_v),
+        idx = find((ts.Time >= ts_l5.Time(i)) & (ts.Time < ts_l5.Data(i)));
+        ts_w = getsamples(ts, idx);
+        l5_v(i) = sum(ts_w.Data);
     end
-    if rem(length(data), 24*60/sampling) > 0,
-        error('DATA shall ba a 24 hours adjusted column vector!');
-    end
-
-    % create periodogram (skip first and last days as it may be incomplete)
-    data24 = split_24(data, sampling);
-
-    % IS
-    n = size(data24, 1)*size(data24, 2);
-    p = size(data24, 2);
-    m = mean(mean(data24));
-    is = (n*sum((mean(data24,1)-m).^2))/...
-            (p*sum(sum((data24-m).^2)));
-
-    % IV WRONG!!! See van Someren
-    n = length(data);
-    iv = (n*sum((data(2:n)-data(1:n-1)).^2))/...
-            ((n-1)*sum((data-mean(data)).^2));
+    l5 = mean(l5_v);
 
     % M10
-    window = 60/sampling*10;
-    m10 = mean(max(filter(ones(1,window),1,data24'),[],2));
-
-    % L5
-    window = 60/sampling*5;
-    l5 = mean(min(filter(ones(1,window),1,data24'),[],2));
+    m10_v = zeros(length(ts_m10.Time), 1);
+    for i=1:length(m10_v),
+        idx = find((ts.Time >= ts_m10.Time(i)) & (ts.Time < ts_m10.Data(i)));
+        ts_w = getsamples(ts, idx);
+        m10_v(i) = sum(ts_w.Data);
+    end
+    m10 = mean(m10_v);
 
     % RA
     ra = (m10-l5)/(m10+l5);

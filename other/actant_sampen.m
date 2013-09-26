@@ -5,7 +5,7 @@ function [ts, markup, vals] = actant_sampen(data, args)
 %   The function wraps sampen to provide ACTANT compatible interface.
 %
 % Arguments:
-%   ts - input data timeseries
+%   data - input data timeseries
 %   args - Cell array of arguments
 %
 % Results (all optional):
@@ -52,7 +52,7 @@ vals = {};
 
 % No arguments passed - return arguments definition
 if nargin == 0,
-    vals{1, 1} = 'Method'; vals{1, 2} = 'SampEn';
+    vals{1, 1} = '_'; vals{1, 2} = 'SampEn';
     vals{2, 1} = 'm'; vals{2, 2} = '2';
     vals{3, 1} = 'r'; vals{3, 2} = '0.2';
     return;

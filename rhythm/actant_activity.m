@@ -1,19 +1,20 @@
-function [entropy, conf95] = mse(data, m, r, s, cb)
-% MSE Calculate multi scale entropy using SampEn algorithm
+function [ts, markup, vals] = actant_activity(data, args)
+% ACTANT_ACTIVITY Wrapper function for ACTIVITY
 %
 % Description:
-%   The function takes a column vector of data and calculates Multi-Scale
-%   Entropy of order m, similarity r and for scales from the s vector.
+%   The function wraps sampen to provide ACTANT compatible interface.
 %
 % Arguments:
-%   data - column vector with data
-%   m - pattern length
-%   r - similarity criteria (% of std)
-%   s - scales vector
-%   cb - callback function to be called after each scale processing
+%   data - input data timeseries
+%   args - Cell array of arguments
 %
-% Results:
-%   entropy - vector with entropy (length of scales)
+% Results (all optional):
+%   ts - Generated timeseries
+%   markup - Generated data markup
+%   vals - Cell array of results
+%
+% When function called without arguments, array of function arguments and
+% default values is returned in vals, prefixed with method name.
 %
 % See also SAMPEN.
 %
@@ -45,20 +46,32 @@ function [entropy, conf95] = mse(data, m, r, s, cb)
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
 
-    R = r*std(data);
-    len_orig = length(data);
-    entropy = zeros(1, length(s));
-    conf95 = zeros(1, length(s));
-    for i = 1:length(s),
-        len_coarse = floor(len_orig/s(i));
-        % coarse grain
-        coarse = sum(reshape(...
-            data(1:(len_orig-rem(len_orig,s(i)))),...
-            s(i), len_coarse), 1)'./s(i);
-        % calculate sample entropy
-        [entropy(i), conf95(i)] = sampen(coarse, m, R);
-        if exist('cb', 'var'),
-            cb(length(s),i);
-        end
-    end
+ts = [];
+markup = [];
+vals = {};
+
+% No arguments passed - return arguments definition
+if nargin == 0,
+    vals{1, 1} = '_'; vals{1, 2} = 'Non-param. Analysis';
+    return;
 end
+
+% We had some arguments - perform analysis
+data_arg = data.Data;
+
+[ts_l5, ts_m10] = l5m10(data);
+[is, iv, l5, m10, ra] = activity(data, ts_l5, ts_m10);
+
+vals{1, 1} = 'IS'; vals{1, 2} = num2str(is); 
+vals{2, 1} = 'IV'; vals{2, 2} = num2str(iv); 
+vals{3, 1} = 'L5'; vals{3, 2} = num2str(l5); 
+vals{4, 1} = 'M10'; vals{4, 2} = num2str(m10); 
+vals{5, 1} = 'RA'; vals{5, 2} = num2str(ra); 
+
+markup = timeseries('L5_M10');
+markup.DataInfo.Unit = 'days';
+markup.TimeInfo.Units = 'days';
+markup.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+markup = addsample(markup, 'Data', ts_l5.Data, 'Time', ts_l5.Time);
+markup = addsample(markup, 'Data', ts_m10.Data, 'Time', ts_m10.Time);

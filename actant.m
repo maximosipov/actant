@@ -130,29 +130,42 @@ update_vslider(handles, 0);
 
 
 function update_vslider(handles, enable, first, last, step, handler)
-global g_data_handle;
-if enable == 0 || size(g_data_handle, 1) < 1,
-    set(handles.slider_v, 'Enable', 'off');
-else
-    set(handles.slider_v, 'Enable', 'on');
-    if exist('first', 'var') && exist('last', 'var') && exist('step', 'var'),
-        set(handles.slider_v, 'Max', last);
-        set(handles.slider_v, 'Min', first);
-        set(handles.slider_v, 'SliderStep', [1/(last - first) 5/(last - first)]);
-        set(handles.slider_v, 'Value', last);
+    global g_data_handle;
+    if enable == 0 || size(g_data_handle, 1) < 1,
+        set(handles.slider_v, 'Enable', 'off');
+    else
+        set(handles.slider_v, 'Enable', 'on');
+        if exist('first', 'var') && exist('last', 'var') && exist('step', 'var'),
+            set(handles.slider_v, 'Max', last);
+            set(handles.slider_v, 'Min', first);
+            set(handles.slider_v, 'SliderStep', [1/(last - first) 5/(last - first)]);
+            set(handles.slider_v, 'Value', last);
+        end
     end
-end
 
 
 function index = get_plot_index(type, handles)
-index = 0;
-dataset = get(handles.uitable_data, 'Data');
-for i=1:size(dataset, 1),
-    if strcmp(dataset{i}, type),
-        index = i;
-        return;
+    index = 0;
+    dataset = get(handles.uitable_data, 'Data');
+    for i=1:size(dataset, 1),
+        if strcmp(dataset{i}, type),
+            index = i;
+            return;
+        end
     end
-end
+
+
+function add_dataset(new_ts, new_name, new_show, handles)
+    global g_data_ts;
+    g_data_ts{size(g_data_ts, 2)+1} = new_ts;
+    datasets = get(handles.uitable_data, 'Data');
+    i = size(datasets, 1) + 1;
+    datasets{i, 1} = new_show;
+    datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
+    datasets{i, 3} = datestr(min(new_ts.Time));
+    datasets{i, 4} = datestr(max(new_ts.Time));
+    datasets{i, 5} = new_name;
+    set(handles.uitable_data, 'Data', datasets);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -219,11 +232,17 @@ if isempty(g_analysis_func),
 end
 
 h = waitbar(0, 'Please wait while analysis completes...');
-[~, ~, analysis_vals] = g_analysis_func(g_data_ts{n}, analysis_args);
+[ts, markup, vals] = g_analysis_func(g_data_ts{n}, analysis_args);
 waitbar(1, h);
 close(h);
 
-set(handles.uitable_results, 'Data', analysis_vals);
+if ~isempty(ts),
+    add_dataset(ts, analysis_args{1,2}, 'Top', handles);
+end
+if ~isempty(markup),
+    add_dataset(markup, analysis_args{1,2}, 'Markup', handles);
+end
+set(handles.uitable_results, 'Data', vals);
 
 
 % --- Executes on button press in pushbutton_save.
@@ -322,20 +341,12 @@ else
 end
 waitbar(1, h);
 close(h);
-g_data_ts{size(g_data_ts, 2)+1} = new_ts;
 
 % Update  screen title
 set(handles.figure_main, 'Name', ['ACTANT - ' new_file]);
 
 % Update data table
-datasets = get(handles.uitable_data, 'Data');
-i = size(datasets, 1) + 1;
-datasets{i, 1} = 'Main';
-datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
-datasets{i, 3} = datestr(min(new_ts.Time));
-datasets{i, 4} = datestr(max(new_ts.Time));
-datasets{i, 5} = new_file;
-set(handles.uitable_data, 'Data', datasets);
+add_dataset(new_ts, new_file, 'Main', handles);
 
 % Update analysis dataset selector
 nums = {};
@@ -372,8 +383,8 @@ function menu_entropy_sampen_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global g_analysis_func;
 g_analysis_func = @actant_sampen;
-[~, ~, sampen_args] = g_analysis_func();
-set(handles.uitable_analysis, 'Data', sampen_args);
+[~, ~, args] = g_analysis_func();
+set(handles.uitable_analysis, 'Data', args);
 
 
 % --------------------------------------------------------------------
@@ -639,6 +650,10 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_entropy_mse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global g_analysis_func;
+g_analysis_func = @actant_mse;
+[~, ~, args] = g_analysis_func();
+set(handles.uitable_analysis, 'Data', args);
 
 
 % --------------------------------------------------------------------
@@ -646,6 +661,10 @@ function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_rhythm_nonparam (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+global g_analysis_func;
+g_analysis_func = @actant_activity;
+[~, ~, args] = g_analysis_func();
+set(handles.uitable_analysis, 'Data', args);
 
 
 % --------------------------------------------------------------------
@@ -662,5 +681,5 @@ function menu_sleep_scoring_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global g_analysis_func;
 g_analysis_func = @actant_sleepscoring;
-[~, ~, sleepscoring_args] = g_analysis_func();
-set(handles.uitable_analysis, 'Data', sleepscoring_args);
+[~, ~, args] = g_analysis_func();
+set(handles.uitable_analysis, 'Data', args);

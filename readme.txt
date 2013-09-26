@@ -48,5 +48,3 @@ additional plot (YY axis, result of windowed analysis) and with markup
 Visualization will include two plots - one at the top with a complete data
 and on the right with selected days. Values for number of days to display
 on the left panel and Y range are configurable below the panel.
-
-(should I use a single plot and add Y offset as with ECG Matlab project?)
