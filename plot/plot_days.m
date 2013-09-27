@@ -1,4 +1,4 @@
-function h = plot_days(h, start, plots, days, tsl, tsr, tsm, liml, limr)
+function h = plot_days(h, start, plots, days, overlap, tsl, tsr, tsm, liml, limr)
 % PLOT_2x24 Plot actimetry and light data on 24 hours multi-day plot
 %
 % Description:
@@ -9,7 +9,8 @@ function h = plot_days(h, start, plots, days, tsl, tsr, tsm, liml, limr)
 %   h - figure handle
 %   start - starting datenum (will be rounded down to midnight)
 %   plots - number of plots to display
-%   days - number of days on a single plot
+%   days - days on a single plot
+%   overlap - days of overlap between subsequent plots
 %   tsl - timeseries for left axis
 %   tsr - timeseries for right axis (optional)
 %   tsm - timeseries for markup (optional)
@@ -83,8 +84,8 @@ for i = 1:plots,
 %    ah = subplot(plots, 1, i);
     ah = subplot_tight(plots, 1, i, [0.005 0.01]);
     % Get data subset
-    t1 = floor(start + i - 1);
-    t2 = floor(start + i + days - 1);
+    t1 = floor(start + (i-1)*days - i*overlap);
+    t2 = floor(start + i*days - i*overlap);
     tvld = find((tsl.Time > t1) & (tsl.Time < t2));
     tsld = getsamples(tsl, tvld);
     tsld_t = tsld.Time;
