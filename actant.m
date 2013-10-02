@@ -177,47 +177,7 @@ function load_file(handles)
     update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
     g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
 
-function convert_file(handles)
-    global g_file_types;
-    % get file name
-    [fn, fp] = uigetfile({'*.bin', 'GENEActiv BIN files (*.bin)'}, 'Select the data file');
-    if fp == 0,
-        return;
-    end
-    % display message that conversion can take a while
-    % option for different save folder
-    sel = questdlg({'The time reuqired for conversion will depend on your'...
-        'system specifications (CPU, RAM) and the file size. Please be patient.'},...
-        'Convert',...
-        'Cancel', 'Ok', 'Ok');
-    
-    if strcmpi(sel, 'Ok')
-        [fp, fn, ext] = fileparts([fp fn]);  
-    else
-        return;
-    end
-    
-    % display wait message
-    h = msgbox('Please wait while data is being converted.', 'Converting...');
-    
-    % read .bin file and convert to .mat variables
-    [header, time, xyz, light, button, prop_val] = read_bin([fp fn ext]);
-    
-    % convert variables to time series objects
-    acc_x  = timeseries(xyz(:,1)     , time, 'name', 'acc_x');
-    acc_y  = timeseries(xyz(:,2)     , time, 'name', 'acc_y');
-    acc_z  = timeseries(xyz(:,3)     , time, 'name', 'acc_z');
-    light  = timeseries(light        , time, 'name', 'light');
-    temp   = timeseries(prop_val(:,2), time, 'name', 'temp');
-    button = timeseries(button       , time, 'name', 'button');
-    
-    % merge time series objects in time series collection
-    tsc = tscollection({acc_x acc_y acc_z light temp button}, 'name', 'tsc');
-    
-    % save file
-    save([fp fn '.mat'], 'header', 'tsc', '-v7.3');
-    close(h)
-    
+  
 function update_plot(handles)
     global g_data_ts g_plot_subs g_plot_days g_plot_overlap...
            g_main_lim g_top_lim;
@@ -471,7 +431,7 @@ function menu_file_convert_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    convert_file(handles)
+    convert_bin
 
 
 
