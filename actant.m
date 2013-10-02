@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 27-Sep-2013 15:11:21
+% Last Modified by GUIDE v2.5 01-Oct-2013 15:44:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,6 +112,7 @@ global g_analysis_func;
 g_file_types = {
     '*.awd', 'Actiwatch-L text files (*.awd)';...
     '*.csv', 'GENEActiv CSV files (*.csv)';...
+    '*.mat', 'GENEActiv MAT files (*.mat)';...
     '*.csv', 'Actopsy CSV files (*.csv)'
     };
 
@@ -153,8 +154,10 @@ function load_file(handles)
         new_ts = load_actiwatch(new_file);
     elseif fi == 2,
         new_ts = load_geneactiv(new_file);
+    elseif fi == 3,
+        new_ts = load(new_file);
     else
-        new_ts = load_actopsy(new_file);
+        new_ts = load_actopsy(new_file);       
     end
     waitbar(1, h);
     close(h);
@@ -174,7 +177,47 @@ function load_file(handles)
     update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
     g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
 
-
+function convert_file(handles)
+    global g_file_types;
+    % get file name
+    [fn, fp] = uigetfile({'*.bin', 'GENEActiv BIN files (*.bin)'}, 'Select the data file');
+    if fp == 0,
+        return;
+    end
+    % display message that conversion can take a while
+    % option for different save folder
+    sel = questdlg({'The time reuqired for conversion will depend on your'...
+        'system specifications (CPU, RAM) and the file size. Please be patient.'},...
+        'Convert',...
+        'Cancel', 'Ok', 'Ok');
+    
+    if strcmpi(sel, 'Ok')
+        [fp, fn, ext] = fileparts([fp fn]);  
+    else
+        return;
+    end
+    
+    % display wait message
+    h = msgbox('Please wait while data is being converted.', 'Converting...');
+    
+    % read .bin file and convert to .mat variables
+    [header, time, xyz, light, button, prop_val] = read_bin([fp fn ext]);
+    
+    % convert variables to time series objects
+    acc_x  = timeseries(xyz(:,1)     , time, 'name', 'acc_x');
+    acc_y  = timeseries(xyz(:,2)     , time, 'name', 'acc_y');
+    acc_z  = timeseries(xyz(:,3)     , time, 'name', 'acc_z');
+    light  = timeseries(light        , time, 'name', 'light');
+    temp   = timeseries(prop_val(:,2), time, 'name', 'temp');
+    button = timeseries(button       , time, 'name', 'button');
+    
+    % merge time series objects in time series collection
+    tsc = tscollection({acc_x acc_y acc_z light temp button}, 'name', 'tsc');
+    
+    % save file
+    save([fp fn '.mat'], 'header', 'tsc', '-v7.3');
+    close(h)
+    
 function update_plot(handles)
     global g_data_ts g_plot_subs g_plot_days g_plot_overlap...
            g_main_lim g_top_lim;
@@ -287,6 +330,8 @@ function add_dataset(new_ts, new_name, new_show, handles)
     global g_data_ts;
     g_data_ts{size(g_data_ts, 2)+1} = new_ts;
     datasets = get(handles.uitable_data, 'Data');
+    % number of time series in the collection
+    % for i = 1:size(ts_new.ts_new.tsc, 2) %%% this should become ts_new.tsc for all files
     i = size(datasets, 1) + 1;
     datasets{i, 1} = new_show;
     datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
@@ -426,6 +471,8 @@ function menu_file_convert_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    convert_file(handles)
+
 
 
 % --- Executes on button press in pushbutton_update_plots.
@@ -697,7 +744,7 @@ function menu_help_about_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function Untitled_1_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_1 (see GCBO)
+% hObject    handle to menu_file_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -737,3 +784,10 @@ function edit_overlap_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --------------------------------------------------------------------
+function menu_sleep_consensus_diary_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_consensus_diary (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
