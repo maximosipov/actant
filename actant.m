@@ -236,6 +236,13 @@ function update_plot(handles)
                 g_main_lim, g_top_lim);
 
 
+function setup_analysis(func, handles)
+    global g_analysis_func;
+    g_analysis_func = func;
+    [~, ~, args] = g_analysis_func();
+    set(handles.uitable_analysis, 'Data', args);
+
+
 function analyze(handles)
     global g_data_ts g_analysis_func;
     analysis_args = get(handles.uitable_analysis, 'Data');
@@ -294,14 +301,6 @@ function add_dataset(new_ts, new_name, new_show, handles)
     datasets{i, 4} = datestr(max(new_ts.Time));
     datasets{i, 5} = new_name;
     set(handles.uitable_data, 'Data', datasets);
-
-
-function setup_analysis(func, handles)
-    global g_analysis_func;
-    g_analysis_func = func;
-    [~, ~, args] = g_analysis_func();
-    set(handles.uitable_analysis, 'Data', args);
-
 
 
 % --- Outputs from this function are returned to the command line.
@@ -714,7 +713,6 @@ function pushbutton_export_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_export (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 
 function edit_overlap_Callback(hObject, eventdata, handles)
