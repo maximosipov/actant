@@ -304,6 +304,7 @@ function add_dataset(data, new_name, new_show, handles)
     for i = 1:numel(field_names)
         % get the first field
         ts_tmp = getfield(data, char(field_names(i))); 
+        
         % check if field is a time series
         if strcmpi(class(ts_tmp), 'timeseries')
             datasets{row, 1} = new_show;
