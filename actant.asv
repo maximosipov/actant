@@ -172,16 +172,15 @@ function load_file(handles)
         nums{i} = num2str(i);
     end
     set(handles.popupmenu_dataset, 'String', nums);
-
-% NEEDS NEW PLOTTING, MAXIM COULD YOU HAVE LOOK?
-%     % Update limits
-%     g_main_lim = [min(min(data.Data)) max(max(data.Data))];
-%     set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
-%     set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
-%     
-%     % Update data plot
-%     update_vslider(handles, 1, floor(min(data.Time)), floor(max(data.Time)), 1);
-%     g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
+    
+    % Update limits
+    g_main_lim = [min(min(data.Data)) max(max(data.Data))];
+    set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
+    set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+    
+    % Update data plot
+    update_vslider(handles, 1, floor(min(data.Time)), floor(max(data.Time)), 1);
+    g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
 
   
 function update_plot(handles)
@@ -302,19 +301,19 @@ function add_dataset(data, new_name, new_show, handles)
     field_names = fieldnames(data);
     
     for i = 1:numel(field_names)
-        % get the first field
-        ts_tmp = getfield(data, char(field_names(i))); 
+        val = getfield(data, char(field_names(i))); 
         % check if field is a time series
-        if strcmpi(class(ts_tmp), 'timeseries')
+        if strcmpi(class(val), 'timeseries')
             datasets{row, 1} = new_show;
-            datasets{row, 2} = [ts_tmp.Name ' (' ts_tmp.DataInfo.Units ')'];
-            datasets{row, 3} = datestr(min(ts_tmp.Time));
-            datasets{row, 4} = datestr(max(ts_tmp.Time));
-            datasets{row, 5} = new_name;           
-            row = row + 1;
+            datasets{row, 2} = [data.Name ' (' data.DataInfo.Units ')'];
+            datasets{row, 3} = datestr(min(data.Time));
+            datasets{row, 4} = datestr(max(data.Time));
+            datasets{row, 5} = new_name;
+            set(handles.uitable_data, 'Data', datasets);
+            
+            row = row+1;
         end
-        set(handles.uitable_data, 'Data', datasets);
-    end            
+            
 
             
 
