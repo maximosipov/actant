@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 27-Sep-2013 15:11:21
+% Last Modified by GUIDE v2.5 02-Oct-2013 10:17:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -425,7 +425,7 @@ function menu_file_convert_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+    convert();
 
 % --- Executes on button press in pushbutton_update_plots.
 function pushbutton_update_plots_Callback(hObject, eventdata, handles)
@@ -690,13 +690,6 @@ function menu_help_Callback(hObject, eventdata, handles)
 % --------------------------------------------------------------------
 function menu_help_about_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_help_about (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function Untitled_1_Callback(hObject, eventdata, handles)
-% hObject    handle to Untitled_1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
