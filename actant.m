@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 02-Oct-2013 10:17:45
+% Last Modified by GUIDE v2.5 01-Oct-2013 15:44:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -112,6 +112,7 @@ global g_analysis_func;
 g_file_types = {
     '*.awd', 'Actiwatch-L text files (*.awd)';...
     '*.csv', 'GENEActiv CSV files (*.csv)';...
+    '*.mat', 'GENEActiv MAT files (*.mat)';...
     '*.csv', 'Actopsy CSV files (*.csv)'
     };
 
@@ -147,34 +148,42 @@ function load_file(handles)
     end
     g_data_file{size(g_data_file, 2)+1} = new_file;
     g_data_handle{size(g_data_handle, 2)+1} = new_handle;
+    
     % Load dataset
     h = waitbar(0, 'Please wait while the data is loaded...');
     if fi == 1,
-        new_ts = load_actiwatch(new_file);
+        data = load_actiwatch(new_file);
     elseif fi == 2,
-        new_ts = load_geneactiv(new_file);
+        data = load_geneactiv(new_file);
+    elseif fi == 3,
+        data = load(new_file);
     else
-        new_ts = load_actopsy(new_file);
+        data = load_actopsy(new_file);       
     end
     waitbar(1, h);
     close(h);
+    
     % Update data table
-    add_dataset(new_ts, new_file, 'Main', handles);
+    add_dataset(data, new_file, 'Main', handles);
+    
     % Update analysis dataset selector
     nums = {};
     for i=1:size(g_data_ts, 2),
         nums{i} = num2str(i);
     end
     set(handles.popupmenu_dataset, 'String', nums);
-    % Update limits
-    g_main_lim = [min(min(new_ts.Data)) max(max(new_ts.Data))];
-    set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
-    set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
-    % Update data plot
-    update_vslider(handles, 1, floor(min(new_ts.Time)), floor(max(new_ts.Time)), 1);
-    g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
 
+% NEEDS NEW PLOTTING, MAXIM COULD YOU HAVE LOOK?
+%     % Update limits
+%     g_main_lim = [min(min(data.Data)) max(max(data.Data))];
+%     set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
+%     set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+%     
+%     % Update data plot
+%     update_vslider(handles, 1, floor(min(data.Time)), floor(max(data.Time)), 1);
+%     g_plot_handle = subplot(1, 1, 1, 'Parent', handles.uipanel_plot);
 
+  
 function update_plot(handles)
     global g_data_ts g_plot_subs g_plot_days g_plot_overlap...
            g_main_lim g_top_lim;
@@ -290,18 +299,32 @@ function index = get_plot_index(type, handles)
     end
 
 
-function add_dataset(new_ts, new_name, new_show, handles)
+function add_dataset(data, new_name, new_show, handles)
     global g_data_ts;
-    g_data_ts{size(g_data_ts, 2)+1} = new_ts;
+    g_data_ts{size(g_data_ts, 2)+1} = data;
     datasets = get(handles.uitable_data, 'Data');
-    i = size(datasets, 1) + 1;
-    datasets{i, 1} = new_show;
-    datasets{i, 2} = [new_ts.Name ' (' new_ts.DataInfo.Units ')'];
-    datasets{i, 3} = datestr(min(new_ts.Time));
-    datasets{i, 4} = datestr(max(new_ts.Time));
-    datasets{i, 5} = new_name;
-    set(handles.uitable_data, 'Data', datasets);
+    row = size(datasets, 1) + 1;
+    
+    % number of time series in the loaded file
+    field_names = fieldnames(data);
+    
+    for i = 1:numel(field_names)
+        % get the first field
+        ts_tmp = getfield(data, char(field_names(i))); 
+        
+        % check if field is a time series
+        if strcmpi(class(ts_tmp), 'timeseries')
+            datasets{row, 1} = new_show;
+            datasets{row, 2} = [ts_tmp.Name ' (' ts_tmp.DataInfo.Units ')'];
+            datasets{row, 3} = datestr(min(ts_tmp.Time));
+            datasets{row, 4} = datestr(max(ts_tmp.Time));
+            datasets{row, 5} = new_name;           
+            row = row + 1;
+        end
+        set(handles.uitable_data, 'Data', datasets);
+    end            
 
+            
 
 % --- Outputs from this function are returned to the command line.
 function varargout = actant_OutputFcn(hObject, eventdata, handles)
@@ -425,7 +448,8 @@ function menu_file_convert_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    convert();
+    convert_bin
+
 
 % --- Executes on button press in pushbutton_update_plots.
 function pushbutton_update_plots_Callback(hObject, eventdata, handles)
@@ -728,3 +752,10 @@ function edit_overlap_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --------------------------------------------------------------------
+function menu_sleep_consensus_diary_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_consensus_diary (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
