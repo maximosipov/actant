@@ -78,10 +78,7 @@ if exist('tsr', 'var') && ~isempty(tsr),
 end
 
 
-%ahs = tight_subplot(plots, 1, 0.005, 0.01, 0.01);
 for i = 1:plots,
-%    ah = ahs(i);
-%    ah = subplot(plots, 1, i);
     ah = subplot_tight(plots, 1, i, [0.005 0.01]);
     % Get data subset
     t1 = floor(start + (i-1)*days - i*overlap);

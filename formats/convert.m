@@ -47,12 +47,23 @@ global g_file_types;
 g_file_types = {
     '*.awd', 'Actiwatch-L text files (*.awd)';...
     '*.csv', 'GENEActiv CSV files (*.csv)';...
+    '*.mat', 'GENEActiv MAT files (*.mat)';...
+    '*.bin', 'GENEActiv BIN files (*.bin)';...
     '*.csv', 'Actopsy CSV files (*.csv)'
     };
 
-
 function file_convert(handles)
-    % Perform data conversion here
+    global g_in_type g_out_type;
+    % Get and check arguments
+    fin = get(handles.text_input, 'String');
+    fout = get(handles.text_output, 'String');
+    fin_type = g_in_type;
+    fout_type = g_out_type;
+    fout_epoch = get(handles.edit_epoch, 'String');
+    % Perform conversion
+    if (fin_type == 4 && fout_type == 3),
+        convert_bin(fin, fout);
+    end
 
 % --- Executes just before convert is made visible.
 function convert_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -193,20 +204,14 @@ function pushbutton_input_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_input (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global g_file_types;
+    global g_file_types g_in_type;
     % get file name
     [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
     if fp == 0,
         return;
     end
-    % Get and open data file
-    new_file = [fp fn];
-    new_handle = fopen(new_file, 'r');
-    if new_handle == -1,
-        warndlg(['Could not open file' new_file]);
-        return;
-    end
-    set(handles.text_input, 'String', new_file);
+    set(handles.text_input, 'String', [fp fn]);
+    g_in_type = fi;
 
 
 % --- Executes on button press in pushbutton_output.
@@ -214,7 +219,7 @@ function pushbutton_output_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_output (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global g_file_types;
+    global g_file_types g_out_type;
     % get selected type
     type_sel = get(handles.popupmenu_format, 'Value');
     % get file name
@@ -222,14 +227,8 @@ function pushbutton_output_Callback(hObject, eventdata, handles)
     if fp == 0,
         return;
     end
-    % Get and open data file
-    new_file = [fp fn];
-    new_handle = fopen(new_file, 'w+');
-    if new_handle == -1,
-        warndlg(['Could not open file' new_file]);
-        return;
-    end
-    set(handles.text_output, 'String', new_file);
+    set(handles.text_output, 'String', [fp fn]);
+    g_out_type = type_sel;
 
 
 % --- Executes on selection change in popupmenu_format.

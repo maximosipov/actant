@@ -1,4 +1,4 @@
-function ts = load_geneactiv(file)
+function out = load_geneactiv(file)
 % LOAD_GENEACTIV Load activity data from GENEActiv CSV file
 %
 % Description:
@@ -9,7 +9,7 @@ function ts = load_geneactiv(file)
 %   file - CSV file name
 %
 % Results:
-%   ts - Timeseries object with 'ACC' name and 'm/s^2' units
+%   out - Structure with timeseries objects
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -52,12 +52,35 @@ end
 tmp = textscan(fid, '%s%f%f%f%f%f%f', 'Delimiter', ',');
 fclose(fid);
 time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS:FFF');
-acc_x = tmp{2};
-acc_y = tmp{3};
-acc_z = tmp{4};
 
 % create timeseries
-ts = timeseries([acc_x, acc_y, acc_z], time, 'Name', 'ACC');
-ts.DataInfo.Unit = 'm/s^2';
-ts.TimeInfo.Units = 'days';
-ts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+out.acc_x = timeseries(tmp{2}, time, 'Name', 'ACCX');
+out.acc_x.DataInfo.Unit = 'g';
+out.acc_x.TimeInfo.Units = 'days';
+out.acc_x.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+out.acc_y = timeseries(tmp{3}, time, 'Name', 'ACCY');
+out.acc_y.DataInfo.Unit = 'g';
+out.acc_y.TimeInfo.Units = 'days';
+out.acc_y.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+out.acc_z = timeseries(tmp{4}, time, 'Name', 'ACCZ');
+out.acc_z.DataInfo.Unit = 'g';
+out.acc_z.TimeInfo.Units = 'days';
+out.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+out.light = timeseries(tmp{5}, time, 'Name', 'LIGHT');
+out.light.DataInfo.Unit = 'lux';
+out.light.TimeInfo.Units = 'days';
+out.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+out.button = timeseries(tmp{6}, time, 'Name', 'BUTTON');
+out.button.DataInfo.Unit = 'binary';
+out.button.TimeInfo.Units = 'days';
+out.button.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+out.temp = timeseries(tmp{7}, time, 'Name', 'TEMP');
+out.temp.DataInfo.Unit = 'degC';
+out.temp.TimeInfo.Units = 'days';
+out.temp.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+

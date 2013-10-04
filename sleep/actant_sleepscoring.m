@@ -9,8 +9,8 @@ function [ts, markup, vals] = actant_sleepscoring(data, args)
 %   args - Cell array of arguments
 %
 % Results (all optional):
-%   ts - Generated timeseries
-%   markup - Generated data markup
+%   ts - Structure of timeseries
+%   markup - Structure of data markups
 %   vals - Cell array of results
 %
 % When function called without arguments, array of function arguments and

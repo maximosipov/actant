@@ -9,8 +9,8 @@ function [ts, markup, vals] = actant_activity(data, args)
 %   args - Cell array of arguments
 %
 % Results (all optional):
-%   ts - Generated timeseries
-%   markup - Generated data markup
+%   ts - Structure of timeseries
+%   markup - Structure of data markups
 %   vals - Cell array of results
 %
 % When function called without arguments, array of function arguments and
@@ -59,19 +59,11 @@ end
 % We had some arguments - perform analysis
 data_arg = data.Data;
 
-[ts_l5, ts_m10] = l5m10(data);
-[is, iv, l5, m10, ra] = activity(data, ts_l5, ts_m10);
+[markup.l5, markup.m10] = l5m10(data);
+[is, iv, l5, m10, ra] = activity(data, markup.l5, markup.m10);
 
 vals{1, 1} = 'IS'; vals{1, 2} = num2str(is); 
 vals{2, 1} = 'IV'; vals{2, 2} = num2str(iv); 
 vals{3, 1} = 'L5'; vals{3, 2} = num2str(l5); 
 vals{4, 1} = 'M10'; vals{4, 2} = num2str(m10); 
 vals{5, 1} = 'RA'; vals{5, 2} = num2str(ra); 
-
-markup = timeseries('L5_M10');
-markup.DataInfo.Unit = 'days';
-markup.TimeInfo.Units = 'days';
-markup.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-
-markup = addsample(markup, 'Data', ts_l5.Data, 'Time', ts_l5.Time);
-markup = addsample(markup, 'Data', ts_m10.Data, 'Time', ts_m10.Time);
