@@ -326,83 +326,9 @@ function varargout = actant_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
-% --------------------------------------------------------------------
-function FileMenu_Callback(hObject, eventdata, handles)
-% hObject    handle to FileMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function OpenMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to OpenMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-file = uigetfile('*.fig');
-if ~isequal(file, 0)
-    open(file);
-end
-
-% --------------------------------------------------------------------
-function PrintMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to PrintMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% --------------------------------------------------------------------
-function CloseMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to CloseMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-selection = questdlg(['Close ' get(handles.figure_main,'Name') '?'],...
-                     ['Close ' get(handles.figure_main,'Name') '...'],...
-                     'Yes','No','Yes');
-if strcmp(selection,'No')
-    return;
-end
-
-delete(handles.figure_main)
-
-
-% --- Executes on button press in pushbutton_analyze.
-function pushbutton_analyze_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_analyze (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    analyze(handles);
-
-
-% --- Executes on button press in pushbutton_save.
-function pushbutton_save_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_save (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on slider movement.
-function slider_v_Callback(hObject, eventdata, handles)
-% hObject    handle to slider_v (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-    update_plot(handles, 1);
-
-
-% --- Executes during object creation, after setting all properties.
-function slider_v_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider_v (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Menu
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % --------------------------------------------------------------------
 function menu_file_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file (see GCBO)
@@ -416,6 +342,81 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     load_file(handles);
+
+
+% --------------------------------------------------------------------
+function menu_file_convert_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file_convert (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    convert();
+
+
+% --------------------------------------------------------------------
+function menu_file_export_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file_export (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_file_print_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_file_print (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    printdlg;
+
+
+% --------------------------------------------------------------------
+function menu_sleep_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_sleep_scoring_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_scoring (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    setup_analysis(@actant_sleepscoring, handles)
+
+
+% --------------------------------------------------------------------
+function menu_sleep_consensus_diary_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_consensus_diary (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_wake_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_wake (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_wake_bins_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_wake_bins (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_rhythm_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_rhythm (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_rhythm_nonparam (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    setup_analysis(@actant_activity, handles)
+
 
 % --------------------------------------------------------------------
 function menu_entropy_Callback(hObject, eventdata, handles)
@@ -433,11 +434,36 @@ function menu_entropy_sampen_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function menu_file_convert_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_file_convert (see GCBO)
+function menu_entropy_mse_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_entropy_mse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    convert();
+    setup_analysis(@actant_mse, handles)
+
+
+% --------------------------------------------------------------------
+function menu_help_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_help (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_help_about_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_help_about (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Button
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Executes on button press in pushbutton_analyze.
+function pushbutton_analyze_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_analyze (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    analyze(handles);
 
 
 % --- Executes on button press in pushbutton_update_plots.
@@ -448,6 +474,16 @@ function pushbutton_update_plots_Callback(hObject, eventdata, handles)
     update_plot(handles, 0);
 
 
+% --- Executes on button press in pushbutton_export.
+function pushbutton_export_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton_export (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Edit
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function edit_plots_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_plots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -492,23 +528,44 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in popupmenu_dataset.
-function popupmenu_dataset_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu_dataset (see GCBO)
+function edit_overlap_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_overlap (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_dataset contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu_dataset
+% Hints: get(hObject,'String') returns contents of edit_overlap as text
+%        str2double(get(hObject,'String')) returns contents of edit_overlap as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function popupmenu_dataset_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu_dataset (see GCBO)
+function edit_overlap_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_overlap (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: popupmenu controls usually have a white background on Windows.
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function edit_main_min_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_main_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_main_min as text
+%        str2double(get(hObject,'String')) returns contents of edit_main_min as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_main_min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_main_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
@@ -527,6 +584,28 @@ function edit_main_max_Callback(hObject, eventdata, handles)
 % --- Executes during object creation, after setting all properties.
 function edit_main_max_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit_main_max (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function edit_top_min_Callback(hObject, eventdata, handles)
+% hObject    handle to edit_top_min (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit_top_min as text
+%        str2double(get(hObject,'String')) returns contents of edit_top_min as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit_top_min_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit_top_min (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -559,197 +638,35 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --------------------------------------------------------------------
-function menu_file_print_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_file_print (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    printdlg;
-
-
-% --------------------------------------------------------------------
-function menu_sleep_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_sleep (see GCBO)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Popup
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Executes on selection change in popupmenu_dataset.
+function popupmenu_dataset_Callback(hObject, eventdata, handles)
+% hObject    handle to popupmenu_dataset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --------------------------------------------------------------------
-function menu_wake_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_wake (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_rhythm_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_rhythm (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-
-function edit_main_min_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_main_min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_main_min as text
-%        str2double(get(hObject,'String')) returns contents of edit_main_min as a double
+% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_dataset contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from popupmenu_dataset
 
 
 % --- Executes during object creation, after setting all properties.
-function edit_main_min_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_main_min (see GCBO)
+function popupmenu_dataset_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to popupmenu_dataset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
+% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
 
 
-
-function edit_top_min_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_top_min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_top_min as text
-%        str2double(get(hObject,'String')) returns contents of edit_top_min as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_top_min_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_top_min (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --------------------------------------------------------------------
-function menu_entropy_mse_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_entropy_mse (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_mse, handles)
-
-
-% --------------------------------------------------------------------
-function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_rhythm_nonparam (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_activity, handles)
-
-
-% --------------------------------------------------------------------
-function menu_wake_bins_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_wake_bins (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_sleep_scoring_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_sleep_scoring (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_sleepscoring, handles)
-
-
-% --------------------------------------------------------------------
-function menu_convert_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_convert (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_convert_geneactiv_mean_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_convert_geneactiv_mean (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_convert_geneactiv_counts_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_convert_geneactiv_counts (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_convert_actopsy_mean_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_convert_actopsy_mean (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_help_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_help (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_help_about_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_help_about (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menu_file_export_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_file_export (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton_export.
-function pushbutton_export_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_export (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-function edit_overlap_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_overlap (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_overlap as text
-%        str2double(get(hObject,'String')) returns contents of edit_overlap as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_overlap_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_overlap (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-% --------------------------------------------------------------------
-function menu_sleep_consensus_diary_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_sleep_consensus_diary (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Main display screen
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % --- Executes during object creation, after setting all properties.
 function uipanel_plot_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to uipanel_plot (see GCBO)
@@ -758,3 +675,26 @@ function uipanel_plot_CreateFcn(hObject, eventdata, handles)
     global g_plot_handle;
     g_plot_handle = subplot(1, 1, 1, 'Parent', hObject);
     set(g_plot_handle, 'Visible', 'off');
+
+    
+% --- Executes on slider movement.
+function slider_v_Callback(hObject, eventdata, handles)
+% hObject    handle to slider_v (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+    update_plot(handles, 1);
+
+
+% --- Executes during object creation, after setting all properties.
+function slider_v_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to slider_v (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
