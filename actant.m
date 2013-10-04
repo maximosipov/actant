@@ -261,7 +261,7 @@ function analyze(handles)
         add_dataset(ts, analysis_args{1,2}, 'Top', handles);
     end
     if ~isempty(markup),
-        add_dataset(markup, analysis_args{1,2}, 'Markup', handles);
+        add_dataset(markup, analysis_args{1,2}, 'No', handles);
     end
     set(handles.uitable_results, 'Data', vals);
 
