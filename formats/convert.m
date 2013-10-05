@@ -22,7 +22,7 @@ function varargout = convert(varargin)
 
 % Edit the above text to modify the response to help convert
 
-% Last Modified by GUIDE v2.5 02-Oct-2013 09:38:41
+% Last Modified by GUIDE v2.5 04-Oct-2013 11:07:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -44,13 +44,17 @@ end
 % End initialization code - DO NOT EDIT
 
 global g_file_types;
+global g_in_type;
+global g_out_type;
+
 g_file_types = {
     '*.awd', 'Actiwatch-L text files (*.awd)';...
     '*.csv', 'GENEActiv CSV files (*.csv)';...
     '*.mat', 'GENEActiv MAT files (*.mat)';...
     '*.bin', 'GENEActiv BIN files (*.bin)';...
     '*.csv', 'Actopsy CSV files (*.csv)'
-    };
+};
+
 
 function file_convert(handles)
     global g_in_type g_out_type;
@@ -59,11 +63,13 @@ function file_convert(handles)
     fout = get(handles.text_output, 'String');
     fin_type = g_in_type;
     fout_type = g_out_type;
-    fout_epoch = get(handles.edit_epoch, 'String');
     % Perform conversion
     if (fin_type == 4 && fout_type == 3),
         convert_bin(fin, fout);
+    elseif (fin_type == 5 && fout_type == 3),
+        convert_actopsy(fin, fout);
     end
+
 
 % --- Executes just before convert is made visible.
 function convert_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -119,9 +125,9 @@ function convert_OpeningFcn(hObject, eventdata, handles, varargin)
     set(hObject, 'Position', FigPos);
     set(hObject, 'Units', OldUnits);
     % Make the GUI modal
-    set(handles.figure1,'WindowStyle','modal')
+    set(handles.figure_convert,'WindowStyle','modal')
     % UIWAIT makes convert wait for user response (see UIRESUME)
-    uiwait(handles.figure1);
+    uiwait(handles.figure_convert);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -134,7 +140,7 @@ function varargout = convert_OutputFcn(hObject, eventdata, handles)
     % Get default command line output from handles structure
     varargout{1} = handles.output;
     % The figure can be deleted now
-    delete(handles.figure1);
+    delete(handles.figure_convert);
 
 
 % --- Executes on button press in pushbutton_ok.
@@ -149,7 +155,7 @@ function pushbutton_ok_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);
     % Use UIRESUME instead of delete because the OutputFcn needs
     % to get the updated handles structure.
-    uiresume(handles.figure1);
+    uiresume(handles.figure_convert);
 
 
 % --- Executes on button press in pushbutton_cancel.
@@ -162,12 +168,12 @@ function pushbutton_cancel_Callback(hObject, eventdata, handles)
     guidata(hObject, handles);
     % Use UIRESUME instead of delete because the OutputFcn needs
     % to get the updated handles structure.
-    uiresume(handles.figure1);
+    uiresume(handles.figure_convert);
 
 
-% --- Executes when user attempts to close figure1.
-function figure1_CloseRequestFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+% --- Executes when user attempts to close figure_convert.
+function figure_convert_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to figure_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     if isequal(get(hObject, 'waitstatus'), 'waiting')
@@ -179,9 +185,9 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     end
 
 
-% --- Executes on key press over figure1 with no controls selected.
-function figure1_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to figure1 (see GCBO)
+% --- Executes on key press over figure_convert with no controls selected.
+function figure_convert_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to figure_convert (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     % Check for "enter" or "escape"
@@ -192,10 +198,10 @@ function figure1_KeyPressFcn(hObject, eventdata, handles)
         % Update handles structure
         guidata(hObject, handles);
 
-        uiresume(handles.figure1);
+        uiresume(handles.figure_convert);
     end
     if isequal(get(hObject,'CurrentKey'),'return')
-        uiresume(handles.figure1);
+        uiresume(handles.figure_convert);
     end    
 
 
@@ -212,6 +218,8 @@ function pushbutton_input_Callback(hObject, eventdata, handles)
     end
     set(handles.text_input, 'String', [fp fn]);
     g_in_type = fi;
+    % clear output file
+    set(handles.text_output, 'String', 'No file selected');
 
 
 % --- Executes on button press in pushbutton_output.
@@ -254,26 +262,3 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
     global g_file_types;
     set(hObject, 'String', g_file_types(:,2));
-
-
-
-function edit_epoch_Callback(hObject, eventdata, handles)
-% hObject    handle to edit_epoch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of edit_epoch as text
-%        str2double(get(hObject,'String')) returns contents of edit_epoch as a double
-
-
-% --- Executes during object creation, after setting all properties.
-function edit_epoch_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit_epoch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
