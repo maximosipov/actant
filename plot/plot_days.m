@@ -50,7 +50,6 @@ function h = plot_days(h, start, plots, days, overlap, tsl, tsr, tsm, liml, limr
 
 hw = waitbar(0, 'Please wait while the plot is updated...');
 
-
 if ~exist('h', 'var'),
     h = figure;
 else
