@@ -1,4 +1,4 @@
-function convert_actopsy(fin, fout)
+function status = convert_actopsy(fin, fout)
 % LOAD_ACTOPSY Convert activity data from Actopsy CSV file to plain
 %              activity MAT
 %
@@ -39,11 +39,31 @@ function convert_actopsy(fin, fout)
 %
 
 % Request resulting epoch length
+status = false;
 fid = fopen(fin, 'r');
 if (fid == -1)
     errordlg(['Could not open file ' fin]);
     return;
 end
+
+% Define waitbar increment and initialize time
+fi = dir(fin);
+fs = fi.bytes;
+tmp = fgets(fid);
+tmp = fgets(fid);
+ls = fgets(fid);
+winc = length(ls)/fs;
+frewind(fid);
+
+% Check what file we've got
+typestr = fgets(fid);
+unitstr = fgets(fid);
+if (~strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n'))),
+    errordlg(sprintf(['Unknown data\n' typestr unitstr]));
+    return;
+end
+
+% Ask about conversion epoch
 str = inputdlg('Epoch length (in seconds):',...
     'Epoch length', 1, {'60'});
 if (length(str) == 1),
@@ -52,22 +72,15 @@ else
     epoch = 60;
 end
 
-% Define waitbar increment and initialize time
-fi = dir(fin);
-fs = fi.bytes;
-ls = fgets(fid);
-frewind(fid);
-winc = length(ls)/fs;
-hw = waitbar(0, 'Please wait while the plot is updated...');
-tmp = textscan(ls, '%s%f%f%f', 'Delimiter', ',');
-
 % Create timeseries
-
-% Read/convert data
 act = timeseries('ACT');
 act.DataInfo.Unit = 'm/s^2';
 act.TimeInfo.Units = 'days';
 act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+% Read/convert data
+hw = waitbar(0, 'Please wait while the plot is updated...');
+tmp = textscan(ls, '%s%f%f%f', 'Delimiter', ',');
 block = 1000;
 wpos = 0;
 accum = 0;
@@ -104,3 +117,5 @@ save(fout, 'act', '-v7.3');
 waitbar(1, hw);
 close (hw);
 fclose(fid);
+status = true;
+

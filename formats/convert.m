@@ -56,18 +56,19 @@ g_file_types = {
 };
 
 
-function file_convert(handles)
+function status = file_convert(handles)
     global g_in_type g_out_type;
     % Get and check arguments
+    status = false;
     fin = get(handles.text_input, 'String');
     fout = get(handles.text_output, 'String');
     fin_type = g_in_type;
     fout_type = g_out_type;
     % Perform conversion
     if (fin_type == 4 && fout_type == 3),
-        convert_bin(fin, fout);
+        status = convert_bin(fin, fout);
     elseif (fin_type == 5 && fout_type == 3),
-        convert_actopsy(fin, fout);
+        status = convert_actopsy(fin, fout);
     end
 
 
@@ -149,13 +150,14 @@ function pushbutton_ok_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     % perform conversion
-    file_convert(handles);
-    handles.output = get(hObject,'String');
-    % Update handles structure
-    guidata(hObject, handles);
-    % Use UIRESUME instead of delete because the OutputFcn needs
-    % to get the updated handles structure.
-    uiresume(handles.figure_convert);
+    if (file_convert(handles)),
+        handles.output = get(hObject,'String');
+        % Update handles structure
+        guidata(hObject, handles);
+        % Use UIRESUME instead of delete because the OutputFcn needs
+        % to get the updated handles structure.
+        uiresume(handles.figure_convert);
+    end
 
 
 % --- Executes on button press in pushbutton_cancel.

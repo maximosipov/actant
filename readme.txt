@@ -1,5 +1,39 @@
 Actant - Activity Analysis Toolbox
 
+Copyright (C) 2013, Maxim Osipov <maxim.osipov@gmail.com>
+Copyright (C) 2013, Bart te Lindert <b.te.lindert@nin.knaw.nl>
+
+This toolbox include multiple data analysis algorithms implemented in
+Matlab and released under Open Source licences. Respective licences are
+referenced directly in the code of specific Matlab functions.
+
+0. About
+========
+
+Actant provides functionality for visualization and analysis of behavioral
+and environmental timeseries, acquired using Actiwatch-L and GENEActiv
+accelerometers as well as Actopsy mobile application. Currently implemented
+analysis methods include:
+
+ - Non-parametric activity analysis: Van Someren, Eus JW, et al. "Bright
+   light therapy: improved sensitivity to its effects on rest-activity
+   rhythms in Alzheimer patients by application of nonparametric methods."
+   Chronobiology international 16.4 (1999): 505-518.
+
+ - Sleep analysis: Reference here
+
+ - Sample Entropy: Richman, Joshua S., and J. Randall Moorman.
+   "Physiological time-series analysis using approximate entropy and sample
+   entropy." American Journal of Physiology-Heart and Circulatory
+   Physiology 278.6 (2000): H2039-H2049.
+
+ - Multiscale Entropy: Costa, Madalena, Ary L. Goldberger, and C-K. Peng.
+   "Multiscale entropy analysis of complex physiologic time series."
+   Physical review letters 89.6 (2002): 068102.
+
+The toolbox provides flexible interface for integration of both new data
+formats and analysis methods. 
+
 1. Data formats
 ===============
 
@@ -55,7 +89,6 @@ When function called without arguments, array of function arguments and
 default values is returned in vals, where the first element of array is '_'
 with the name of the analysis method as value.
 
-
 3. Visualization
 ================
 
@@ -66,3 +99,10 @@ patches, result of segmentation).
 The plot is configurable with a number of plots to display, number of days
 per plot and overlap between plots (in days), so that both single day plots
 can be displayed with N-1-0 and 48 hours actogram with N-2-1 settings.
+
+4. Contributions
+================
+
+Authors would appreciate your contributions to the Actant project (code can
+be found at https://github.com/maximosipov/actant). Also, you are invited
+to contrubute your datasets to Physionet (http://www.physionet.org/).

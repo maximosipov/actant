@@ -15,6 +15,13 @@ function [is, iv, l5, m10, ra] = activity(ts, ts_l5, ts_m10)
 %     m10 - average level at 10 most active hours
 %     ra - relative amplitude ra = (m10-l5)/(m10+l5)
 %
+%   Reference:
+%
+%   Van Someren, Eus JW, et al. "Bright light therapy: improved sensitivity
+%   to its effects on rest-activity rhythms in Alzheimer patients by
+%   application of nonparametric methods." Chronobiology international 16.4
+%   (1999): 505-518.
+%
 % See also L5M10.
 %
 % Copyright (C) 2011-2013, Maxim Osipov
