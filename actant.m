@@ -314,7 +314,6 @@ function add_dataset(data, new_name, new_show, handles)
         set(handles.uitable_data, 'Data', datasets);
     end            
 
-            
 
 % --- Outputs from this function are returned to the command line.
 function varargout = actant_OutputFcn(hObject, eventdata, handles)
@@ -325,6 +324,7 @@ function varargout = actant_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Menu
@@ -492,6 +492,7 @@ function edit_plots_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_plots as text
 %        str2double(get(hObject,'String')) returns contents of edit_plots as a double
+    chknum(handles.edit_plots);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -514,6 +515,7 @@ function edit_days_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_days as text
 %        str2double(get(hObject,'String')) returns contents of edit_days as a double
+    chknum(handles.edit_days);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -536,6 +538,7 @@ function edit_overlap_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_overlap as text
 %        str2double(get(hObject,'String')) returns contents of edit_overlap as a double
+    chknum(handles.edit_overlap);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -558,6 +561,7 @@ function edit_main_min_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_main_min as text
 %        str2double(get(hObject,'String')) returns contents of edit_main_min as a double
+    chknum(handles.edit_main_min);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -580,6 +584,7 @@ function edit_main_max_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_main_max as text
 %        str2double(get(hObject,'String')) returns contents of edit_main_max as a double
+    chknum(handles.edit_main_max);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -602,6 +607,7 @@ function edit_top_min_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_top_min as text
 %        str2double(get(hObject,'String')) returns contents of edit_top_min as a double
+    chknum(handles.edit_top_min);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -624,6 +630,7 @@ function edit_top_max_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_top_max as text
 %        str2double(get(hObject,'String')) returns contents of edit_top_max as a double
+    chknum(handles.edit_top_max);
 
 
 % --- Executes during object creation, after setting all properties.

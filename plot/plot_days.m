@@ -1,9 +1,10 @@
 function h = plot_days(h, start, plots, days, overlap, tsl, tsr, tsm, liml, limr)
-% PLOT_2x24 Plot actimetry and light data on 24 hours multi-day plot
+% PLOT_DAYS yyplot with markup with multiple subplots and overlap
 %
 % Description:
-%   Plot the data from timeseries on left axis, right axis and as patches
-%   on a multi-day 24-hours plot.
+%   Plot data from timeseries on left axis, right axis and patches on a
+%   figure with 'plots' subplots each of 'days' days and with 'overlap'
+%   days overlap.
 % 
 % Arguments:
 %   h - figure handle
