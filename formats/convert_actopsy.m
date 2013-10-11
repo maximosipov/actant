@@ -1,10 +1,11 @@
 function status = convert_actopsy(fin, fout)
-% LOAD_ACTOPSY Convert activity data from Actopsy CSV file to plain
-%              activity MAT
+% LOAD_ACTOPSY Convert data from Actopsy CSV files to plain Actant MAT
 %
 % Description:
-%   The function takes a CSV files with activity data from the Actopsy app
-%   and resamples it to generate mean activity profile.
+%   The function takes a CSV files with data from the Actopsy app and
+%   resamples it to generate mean profile. The data can be acceleration,
+%   light, calls/texts or location. For calls/texts markups are created
+%   and for location distance travelled between two data samples.
 %
 % Arguments:
 %   fin - Actopsy CSV file name
@@ -56,16 +57,20 @@ winc = length(ls)/fs;
 frewind(fid);
 
 % Check what file we've got
+type = 0;
 typestr = fgets(fid);
 unitstr = fgets(fid);
-if (~strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n'))),
+if strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n')),
+    type = 1;
+elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
+    type = 2;
+else
     errordlg(sprintf(['Unknown data\n' typestr unitstr]), 'Error', 'modal');
     return;
 end
 
 % Ask about conversion epoch
-str = inputdlg('Epoch length (in seconds):',...
-    'Epoch length', 1, {'60'});
+str = inputdlg('Epoch length (in seconds):', 'Epoch length', 1, {'60'});
 if (length(str) == 1),
     epoch = str2num(str{1});
 else
@@ -73,14 +78,25 @@ else
 end
 
 % Create timeseries
-act = timeseries('ACT');
-act.DataInfo.Unit = 'm/s^2';
-act.TimeInfo.Units = 'days';
-act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+switch type,
+    case 1,
+        ts = timeseries('ACT');
+        ts.DataInfo.Unit = 'm/s^2';
+    case 2,
+        ts = timeseries('LIGHT');
+        ts.DataInfo.Unit = 'lux';
+end
+ts.TimeInfo.Units = 'days';
+ts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
 % Read/convert data
-hw = waitbar(0, 'Please wait while the plot is updated...');
-tmp = textscan(ls, '%s%f%f%f', 'Delimiter', ',');
+hw = waitbar(0, 'Please wait while the data is converted...');
+switch type,
+    case 1,
+        tmp = textscan(ls, '%s%f%f%f', 'Delimiter', ',');
+    case 2,
+        tmp = textscan(ls, '%s%f', 'Delimiter', ',');
+end
 block = 1000;
 wpos = 0;
 accum = 0;
@@ -88,18 +104,24 @@ n = 0;
 tinc = 1*epoch/(24*60*60);
 tpos = ceil(datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF')/tinc)*tinc;
 while ~feof(fid),
-    tmp = textscan(fid, '%s%f%f%f', block, 'Delimiter', ',');
-    acc = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
+    switch type,
+        case 1,
+            tmp = textscan(fid, '%s%f%f%f', block, 'Delimiter', ',');
+            val = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
+        case 2,
+            tmp = textscan(fid, '%s%f', block, 'Delimiter', ',');
+            val = tmp{2};
+    end
     time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
     % accumulate values for each period
     for i=1:length(time),
         if time(i) < tpos,
-            accum = accum + acc(i);
+            accum = accum + val(i);
             n = n + 1;
         else
-            act = addsample(act, 'Data', accum/n, 'Time', tpos);
+            ts = addsample(ts, 'Data', accum/n, 'Time', tpos);
             tpos = tpos + tinc;
-            accum = acc(i);
+            accum = val(i);
             n = 1;
         end
     end
@@ -112,7 +134,7 @@ while ~feof(fid),
 end
 
 % Save file
-save(fout, 'act', '-v7.3');
+save(fout, 'ts', '-v7.3');
 
 waitbar(1, hw);
 close (hw);
