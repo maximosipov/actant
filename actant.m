@@ -584,7 +584,9 @@ function edit_main_min_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_main_min as text
 %        str2double(get(hObject,'String')) returns contents of edit_main_min as a double
-    chknum(handles.edit_main_min);
+    if ~isempty(get(handles.edit_main_min, 'String')),
+        chknum(handles.edit_main_min);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -607,7 +609,9 @@ function edit_main_max_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_main_max as text
 %        str2double(get(hObject,'String')) returns contents of edit_main_max as a double
-    chknum(handles.edit_main_max);
+    if ~isempty(get(handles.edit_main_max, 'String')),
+        chknum(handles.edit_main_max);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -630,7 +634,9 @@ function edit_top_min_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_top_min as text
 %        str2double(get(hObject,'String')) returns contents of edit_top_min as a double
-    chknum(handles.edit_top_min);
+    if ~isempty(get(handles.edit_top_min, 'String')),
+        chknum(handles.edit_top_min);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -653,7 +659,9 @@ function edit_top_max_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_top_max as text
 %        str2double(get(hObject,'String')) returns contents of edit_top_max as a double
-    chknum(handles.edit_top_max);
+    if ~isempty(get(handles.edit_top_max, 'String')),
+        chknum(handles.edit_top_max);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
