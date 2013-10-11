@@ -143,7 +143,7 @@ function load_file(handles)
     new_file = [fp fn];
     new_handle = fopen(new_file, 'r');
     if new_handle == -1,
-        warndlg(['Could not open file' new_file]);
+        errordlg(['Could not open file' new_file], 'Error', 'modal');
         return;
     end
     g_data_file{size(g_data_file, 2)+1} = new_file;
@@ -174,23 +174,29 @@ function load_file(handles)
 function update_plot(handles, slide)
     global g_data_ts g_plot_subs g_plot_days g_plot_overlap...
            g_main_lim g_top_lim;
+    if ~chknum(handles.edit_plots) || ~chknum(handles.edit_days) ||...
+            ~chknum(handles.edit_overlap),
+        return;
+    end
     % get timeseries to display
     ts_main = [];
     idx_main = get_plot_index('Main', handles);
     if idx_main > 0,
         ts_main = g_data_ts{idx_main};
         % Update limits
-        main_min = get(handles.edit_main_min, 'String');
-        main_max = get(handles.edit_main_max, 'String');
-        if isempty(main_min) || isempty(main_max),
+        if isempty(get(handles.edit_main_min, 'String')) ||...
+                isempty(get(handles.edit_main_max, 'String')),
             g_main_lim = [min(min(ts_main.Data)) max(max(ts_main.Data))];
             set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
             set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
-        else
-            g_main_lim = [str2num(main_min) str2num(main_max)];
+        elseif ~chknum(handles.edit_main_min) || ~chknum(handles.edit_main_max)
+            return;
         end
+        main_min = get(handles.edit_main_min, 'String');
+        main_max = get(handles.edit_main_max, 'String');
+        g_main_lim = [str2double(main_min) str2double(main_max)];
     else
-        errordlg('Please select the main plot!');
+        errordlg('Please select the main plot!', 'Error', 'modal');
         return;
     end
     ts_top = [];
@@ -198,15 +204,17 @@ function update_plot(handles, slide)
     if idx_top > 0,
         ts_top = g_data_ts{idx_top};
         % Update limits
-        top_min = get(handles.edit_top_min, 'String');
-        top_max = get(handles.edit_top_max, 'String');
-        if isempty(top_min) || isempty(top_max),
+        if isempty(get(handles.edit_top_min, 'String')) ||...
+                isempty(get(handles.edit_top_max, 'String')),
             g_top_lim = [min(min(ts_top.Data)) max(max(ts_top.Data))];
             set(handles.edit_top_min, 'String', num2str(g_top_lim(1)));
             set(handles.edit_top_max, 'String', num2str(g_top_lim(2)));
-        else
-            g_top_lim = [str2num(top_min) str2num(top_max)];
+        elseif ~chknum(handles.edit_top_min) || ~chknum(handles.edit_top_max)
+            return;
         end
+        top_min = get(handles.edit_top_min, 'String');
+        top_max = get(handles.edit_top_max, 'String');
+        g_top_lim = [str2double(top_min) str2double(top_max)];
     end
     ts_markup = [];
     idx_markup = get_plot_index('Markup', handles);
@@ -226,11 +234,11 @@ function update_plot(handles, slide)
     smin = get(handles.slider_v, 'Min');
     % get number of plots, days and overlap
     val = get(handles.edit_plots, 'String');
-    g_plot_subs = str2num(val);
+    g_plot_subs = str2double(val);
     val = get(handles.edit_days, 'String');
-    g_plot_days = str2num(val);
+    g_plot_days = str2double(val);
     val = get(handles.edit_overlap, 'String');
-    g_plot_overlap = str2num(val);
+    g_plot_overlap = str2double(val);
     % Plot
     plot_days(handles.uipanel_plot, start + smax - sval,...
                 g_plot_subs, g_plot_days, g_plot_overlap,...
@@ -250,7 +258,7 @@ function analyze(handles)
     analysis_args = get(handles.uitable_analysis, 'Data');
     n = get(handles.popupmenu_dataset, 'Value');
     if isempty(g_analysis_func),
-        errordlg('Please select analysis method!');
+        errordlg('Please select analysis method!', 'Error', 'modal');
         return;
     end
     h = waitbar(0, 'Please wait while analysis completes...');
@@ -313,6 +321,21 @@ function add_dataset(data, new_name, new_show, handles)
         end
         set(handles.uitable_data, 'Data', datasets);
     end            
+
+
+function status = chknum(h)
+    status = false;
+    str = get(h, 'String');
+    val = str2double(str);
+    if isnan(val) || ~isreal(val),
+        set(h, 'BackgroundColor', [1 0 0]);
+        uicontrol(h);
+        status = false;
+        errordlg('Value shall be numeric!', 'Error', 'modal');
+    else
+        set(h, 'BackgroundColor', [1 1 1]);
+        status = true;
+    end
 
 
 % --- Outputs from this function are returned to the command line.

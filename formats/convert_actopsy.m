@@ -42,7 +42,7 @@ function status = convert_actopsy(fin, fout)
 status = false;
 fid = fopen(fin, 'r');
 if (fid == -1)
-    errordlg(['Could not open file ' fin]);
+    errordlg(['Could not open file ' fin], 'Error', 'modal');
     return;
 end
 
@@ -59,7 +59,7 @@ frewind(fid);
 typestr = fgets(fid);
 unitstr = fgets(fid);
 if (~strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n'))),
-    errordlg(sprintf(['Unknown data\n' typestr unitstr]));
+    errordlg(sprintf(['Unknown data\n' typestr unitstr]), 'Error', 'modal');
     return;
 end
 

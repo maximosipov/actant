@@ -55,7 +55,7 @@ if ~exist('h', 'var'),
     h = figure;
 else
     f = h;
-    while ~isempty(f) & ~strcmp('figure', get(f,'type')),
+    while ~isempty(f) && ~strcmp('figure', get(f,'type')),
         f = get(f, 'parent');
     end
     set(0, 'currentfigure', f);

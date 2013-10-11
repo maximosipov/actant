@@ -60,8 +60,12 @@ end
 
 % We had some arguments - perform analysis
 data_arg = data.Data;
-m_arg = str2num(args{2, 2});
-r_arg = str2num(args{3, 2});
+m_arg = str2double(args{2, 2});
+r_arg = str2double(args{3, 2});
+if isnan(m_arg) || ~isreal(m_arg) || isnan(r_arg) || ~isreal(r_arg),
+    errordlg('Arguments shall be numeric!', 'Error', 'modal');
+    return;
+end
 
 [entropy, conf95] = sampen(data_arg, m_arg, r_arg);
 
