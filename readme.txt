@@ -46,6 +46,9 @@ the following names:
   LIGHT - light data (lux)
   TEMP - temperature data (degC)
   BUTTON - button press indicators (binary)
+  SPEED - distance travelled (km/h, inaccurate depending on location)
+  SMS - sms messages (days, each character counted as second)
+  CALL - phone calls (days)
 
 Plus, in future:
 
