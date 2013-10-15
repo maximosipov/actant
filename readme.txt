@@ -73,8 +73,8 @@ state, including datasets, analysis algorithm and results:
   datasets - array of timeseries objects for datasets
   files - array of filenames for 'datasets'
   analysis
-    method - analysis method name
-    arguments - method arguments
+    method - analysis method name (matlab function name)
+    args - method arguments
     results - results of analysis (except timeseries)
 
 2. Analysis methods

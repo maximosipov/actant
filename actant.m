@@ -118,8 +118,7 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
     global actant_files;
     global actant_datasets;
     global actant_plot;
-
-    global g_analysis_func;
+    global actant_analysis;
 
     actant_files = {};
     actant_datasets = {};
@@ -130,8 +129,11 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
         'main_lim', [], ...
         'top_lim', [] ...
 	);
-
-    g_analysis_func = [];
+    actant_analysis = struct(...
+        'method', '_', ...
+        'args', [], ...
+        'results', [] ...
+	);
 
     update_vslider(handles, 0);
 
@@ -254,23 +256,24 @@ function update_plot(handles, slide)
 
     
 function setup_analysis(func, handles)
-    global g_analysis_func;
-    g_analysis_func = func;
-    [~, ~, args] = g_analysis_func();
-    set(handles.uitable_analysis, 'Data', args);
+    global actant_analysis;
+    actant_analysis.method = func2str(func);
+    [~, ~, actant_analysis.args] = func();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 function analyze(handles)
     global actant_datasets;
-    global g_analysis_func;
+    global actant_analysis;
     analysis_args = get(handles.uitable_analysis, 'Data');
     n = get(handles.popupmenu_dataset, 'Value');
-    if isempty(g_analysis_func),
+    if strcmp(actant_analysis.method, '_'),
         errordlg('Please select analysis method!', 'Error', 'modal');
         return;
     end
     h = waitbar(0, 'Please wait while analysis completes...');
-    [ts, markup, vals] = g_analysis_func(actant_datasets{n}, analysis_args);
+    func = str2func(actant_analysis.method);
+    [ts, markup, actant_analysis.results] = func(actant_datasets{n}, analysis_args);
     waitbar(1, h);
     close(h);
     if ~isempty(ts),
@@ -279,7 +282,7 @@ function analyze(handles)
     if ~isempty(markup),
         add_dataset(markup, analysis_args{1,2}, 'No', handles);
     end
-    set(handles.uitable_results, 'Data', vals);
+    set(handles.uitable_results, 'Data', actant_analysis.results);
 
 
 function update_vslider(handles, enable, first, last, step, handler)
@@ -784,17 +787,18 @@ function file_menu_load_Callback(hObject, eventdata, handles)
     global actant_datasets;
     global actant_files;
     global actant_plot;
+    global actant_analysis;
     global g_file_types;
     global g_type_idx;
-    % Select input file
+    % Load input file
     [fn, fp, fi] = uigetfile(g_file_types(g_type_idx.actant_mat,:),...
         'Select data file');
     if fp == 0,
         return;
     end
     file = [fp fn];
-    % Load and initialize controls
-    load(file, 'actant_datasets', 'actant_files', 'actant_plot');
+    load(file, 'actant_datasets', 'actant_files', 'actant_plot', 'actant_analysis');
+    % Initialize datasets table
     data = get(handles.uitable_data, 'Data');
     nums = {};
     for i=1:length(actant_datasets),
@@ -808,6 +812,7 @@ function file_menu_load_Callback(hObject, eventdata, handles)
     end
     set(handles.uitable_data, 'Data', data);
     set(handles.popupmenu_dataset, 'String', nums);
+    % Initialize settings screen
     set(handles.edit_plots, 'String', num2str(actant_plot.subs));
     set(handles.edit_days, 'String', num2str(actant_plot.days));
     set(handles.edit_overlap, 'String', num2str(actant_plot.overlap));
@@ -819,6 +824,9 @@ function file_menu_load_Callback(hObject, eventdata, handles)
         set(handles.edit_top_min, 'String', num2str(actant_plot.top_lim(1)));
         set(handles.edit_top_max, 'String', num2str(actant_plot.top_lim(2)));
     end
+    % Initialize analysis
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
+    set(handles.uitable_results, 'Data', actant_analysis.results);
 
 
 % --------------------------------------------------------------------
@@ -829,6 +837,7 @@ function file_menu_save_Callback(hObject, eventdata, handles)
     global actant_datasets;
     global actant_files;
     global actant_plot;
+    global actant_analysis;
     global g_file_types;
     global g_type_idx;
     % Select output file
@@ -838,4 +847,5 @@ function file_menu_save_Callback(hObject, eventdata, handles)
         return;
     end
     file = [fp fn];
-    save(file, 'actant_datasets', 'actant_files', 'actant_plot', '-v7.3');
+    save(file, 'actant_datasets', 'actant_files', 'actant_plot',...
+        'actant_analysis', '-v7.3');
