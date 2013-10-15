@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 08-Oct-2013 11:41:57
+% Last Modified by GUIDE v2.5 15-Oct-2013 12:56:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -78,85 +78,92 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to actant (see VARARGIN)
 
-% Choose default command line output for actant
-handles.output = hObject;
+    % Choose default command line output for actant
+    handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
+    % Update handles structure
+    guidata(hObject, handles);
 
-% UIWAIT makes actant wait for user response (see UIRESUME)
-% uiwait(handles.figure_main);
+    % UIWAIT makes actant wait for user response (see UIRESUME)
+    % uiwait(handles.figure_main);
 
-addpath('./formats');
-addpath('./sleep');
-addpath('./wake');
-addpath('./rhythm');
-addpath('./other');
-addpath('./plot');
+    addpath('./formats');
+    addpath('./sleep');
+    addpath('./wake');
+    addpath('./rhythm');
+    addpath('./other');
+    addpath('./plot');
 
-global g_file_types;
+    %---------------------------------------------------------------------
+    % Constant or internal data
+    global g_file_types;
+    global g_type_idx;
+    global g_plot_handle;
+    g_file_types = {
+        '*.awd', 'Actiwatch-L text files (*.awd)';...
+        '*.csv', 'GENEActiv CSV files (*.csv)';...
+        '*.mat', 'Actant MAT files (*.mat)';...
+        '*.csv', 'Actopsy CSV files (*.csv)'
+	};
+    g_type_idx = struct(...
+        'actiwatch_awd', 1, ...
+    	'geneactiv_csv', 2, ...
+        'actant_mat', 3, ...
+    	'actopsy_csv', 4 ...
+    );
+    g_plot_handle = -1;
 
-global g_data_file;
-global g_data_ts;
-global g_data_handle;
+    %---------------------------------------------------------------------
+    % Loadable context
+    global actant_files;
+    global actant_datasets;
+    global actant_plot;
 
-global g_plot_subs;
-global g_plot_days;
-global g_plot_overlap;
-global g_plot_handle;
-global g_main_lim;
-global g_top_lim;
+    global g_analysis_func;
 
-global g_analysis_func;
+    actant_files = {};
+    actant_datasets = {};
+    actant_plot = struct(...
+        'subs', 5, ...
+        'days', 1, ...
+        'overlap', 0, ...
+        'main_lim', [], ...
+        'top_lim', [] ...
+	);
 
-g_file_types = {
-    '*.awd', 'Actiwatch-L text files (*.awd)';...
-    '*.csv', 'GENEActiv CSV files (*.csv)';...
-    '*.mat', 'GENEActiv MAT files (*.mat)';...
-    '*.csv', 'Actopsy CSV files (*.csv)'
-    };
+    g_analysis_func = [];
 
-g_data_file = {};
-g_data_ts = {};
-g_data_handle = [];
+    update_vslider(handles, 0);
 
-g_plot_subs = 5;
-g_plot_days = 1;
-g_plot_overlap = 0;
-g_plot_handle = -1;
-g_main_lim = [];
-g_top_lim = [];
-
-g_analysis_func = [];
-
-update_vslider(handles, 0);
 
 function load_file(handles)
-    global g_data_handle g_data_file g_data_ts g_plot_handle...
-        g_file_types g_main_lim;
+    global g_file_types;
+    global g_type_idx;
+    global actant_files;
+    global actant_datasets;
     % get file name
     [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
     if fp == 0,
         return;
     end
-    % Get and open data file
+    % Get and check data file
     new_file = [fp fn];
     new_handle = fopen(new_file, 'r');
     if new_handle == -1,
         errordlg(['Could not open file' new_file], 'Error', 'modal');
         return;
     end
-    g_data_file{size(g_data_file, 2)+1} = new_file;
-    g_data_handle{size(g_data_handle, 2)+1} = new_handle;
+    fclose(new_handle);
+    actant_files{size(actant_files, 2)+1} = new_file;
     % Load dataset
     h = waitbar(0, 'Please wait while the data is loaded...');
-    if fi == 1,
+    if fi == g_type_idx.actiwatch_awd,
         data = load_actiwatch(new_file);
-    elseif fi == 2,
+    elseif fi == g_type_idx.geneactiv_csv,
         data = load_geneactiv(new_file);
-    elseif fi == 3,
+    elseif fi == g_type_idx.actant_mat,
         data = load(new_file);
-    else
+    elseif fi == g_type_idx.actopsy_csv,
         data = load_actopsy(new_file);       
     end
     waitbar(1, h);
@@ -165,15 +172,15 @@ function load_file(handles)
     add_dataset(data, new_file, 'No', handles);
     % Update analysis dataset selector
     nums = {};
-    for i=1:size(g_data_ts, 2),
+    for i=1:size(actant_datasets, 2),
         nums{i} = num2str(i);
     end
     set(handles.popupmenu_dataset, 'String', nums);
 
   
 function update_plot(handles, slide)
-    global g_data_ts g_plot_subs g_plot_days g_plot_overlap...
-           g_main_lim g_top_lim;
+    global actant_datasets;
+    global actant_plot;
     if ~chknum(handles.edit_plots) || ~chknum(handles.edit_days) ||...
             ~chknum(handles.edit_overlap),
         return;
@@ -182,19 +189,19 @@ function update_plot(handles, slide)
     ts_main = [];
     idx_main = get_plot_index('Main', handles);
     if idx_main > 0,
-        ts_main = g_data_ts{idx_main};
+        ts_main = actant_datasets{idx_main};
         % Update limits
         if isempty(get(handles.edit_main_min, 'String')) ||...
                 isempty(get(handles.edit_main_max, 'String')),
-            g_main_lim = [min(min(ts_main.Data)) max(max(ts_main.Data))];
-            set(handles.edit_main_min, 'String', num2str(g_main_lim(1)));
-            set(handles.edit_main_max, 'String', num2str(g_main_lim(2)));
+            actant_plot.main_lim = [min(min(ts_main.Data)) max(max(ts_main.Data))];
+            set(handles.edit_main_min, 'String', num2str(actant_plot.main_lim(1)));
+            set(handles.edit_main_max, 'String', num2str(actant_plot.main_lim(2)));
         elseif ~chknum(handles.edit_main_min) || ~chknum(handles.edit_main_max)
             return;
         end
         main_min = get(handles.edit_main_min, 'String');
         main_max = get(handles.edit_main_max, 'String');
-        g_main_lim = [str2double(main_min) str2double(main_max)];
+        actant_plot.main_lim = [str2double(main_min) str2double(main_max)];
     else
         errordlg('Please select the main plot!', 'Error', 'modal');
         return;
@@ -202,24 +209,24 @@ function update_plot(handles, slide)
     ts_top = [];
     idx_top = get_plot_index('Top', handles);
     if idx_top > 0,
-        ts_top = g_data_ts{idx_top};
+        ts_top = actant_datasets{idx_top};
         % Update limits
         if isempty(get(handles.edit_top_min, 'String')) ||...
                 isempty(get(handles.edit_top_max, 'String')),
-            g_top_lim = [min(min(ts_top.Data)) max(max(ts_top.Data))];
-            set(handles.edit_top_min, 'String', num2str(g_top_lim(1)));
-            set(handles.edit_top_max, 'String', num2str(g_top_lim(2)));
+            actant_plot.top_lim = [min(min(ts_top.Data)) max(max(ts_top.Data))];
+            set(handles.edit_top_min, 'String', num2str(actant_plot.top_lim(1)));
+            set(handles.edit_top_max, 'String', num2str(actant_plot.top_lim(2)));
         elseif ~chknum(handles.edit_top_min) || ~chknum(handles.edit_top_max)
             return;
         end
         top_min = get(handles.edit_top_min, 'String');
         top_max = get(handles.edit_top_max, 'String');
-        g_top_lim = [str2double(top_min) str2double(top_max)];
+        actant_plot.top_lim = [str2double(top_min) str2double(top_max)];
     end
     ts_markup = [];
     idx_markup = get_plot_index('Markup', handles);
     if idx_markup > 0,
-        ts_markup = g_data_ts{idx_markup};
+        ts_markup = actant_datasets{idx_markup};
     end
     % Update screen title
     dataset = get(handles.uitable_data, 'Data');
@@ -234,16 +241,16 @@ function update_plot(handles, slide)
     smin = get(handles.slider_v, 'Min');
     % get number of plots, days and overlap
     val = get(handles.edit_plots, 'String');
-    g_plot_subs = str2double(val);
+    actant_plot.subs = str2double(val);
     val = get(handles.edit_days, 'String');
-    g_plot_days = str2double(val);
+    actant_plot.days = str2double(val);
     val = get(handles.edit_overlap, 'String');
-    g_plot_overlap = str2double(val);
+    actant_plot.overlap = str2double(val);
     % Plot
     plot_days(handles.uipanel_plot, start + smax - sval,...
-                g_plot_subs, g_plot_days, g_plot_overlap,...
+                actant_plot.subs, actant_plot.days, actant_plot.overlap,...
                 ts_main, ts_top, ts_markup,...
-                g_main_lim, g_top_lim);
+                actant_plot.main_lim, actant_plot.top_lim);
 
     
 function setup_analysis(func, handles)
@@ -254,7 +261,8 @@ function setup_analysis(func, handles)
 
 
 function analyze(handles)
-    global g_data_ts g_analysis_func;
+    global actant_datasets;
+    global g_analysis_func;
     analysis_args = get(handles.uitable_analysis, 'Data');
     n = get(handles.popupmenu_dataset, 'Value');
     if isempty(g_analysis_func),
@@ -262,7 +270,7 @@ function analyze(handles)
         return;
     end
     h = waitbar(0, 'Please wait while analysis completes...');
-    [ts, markup, vals] = g_analysis_func(g_data_ts{n}, analysis_args);
+    [ts, markup, vals] = g_analysis_func(actant_datasets{n}, analysis_args);
     waitbar(1, h);
     close(h);
     if ~isempty(ts),
@@ -275,8 +283,8 @@ function analyze(handles)
 
 
 function update_vslider(handles, enable, first, last, step, handler)
-    global g_data_handle;
-    if enable == 0 || size(g_data_handle, 1) < 1,
+    global actant_files;
+    if enable == 0 || size(actant_files, 2) < 1,
         set(handles.slider_v, 'Enable', 'off');
     else
         set(handles.slider_v, 'Enable', 'on');
@@ -301,7 +309,7 @@ function index = get_plot_index(type, handles)
 
 
 function add_dataset(data, new_name, new_show, handles)
-    global g_data_ts;
+    global actant_datasets;
     datasets = get(handles.uitable_data, 'Data');
     row = size(datasets, 1) + 1;
     % number of time series in the loaded file
@@ -317,7 +325,7 @@ function add_dataset(data, new_name, new_show, handles)
             datasets{row, 4} = datestr(max(ts_tmp.Time));
             datasets{row, 5} = new_name;           
             row = row + 1;
-            g_data_ts{size(g_data_ts, 2)+1} = ts_tmp;
+            actant_datasets{size(actant_datasets, 2)+1} = ts_tmp;
         end
         set(handles.uitable_data, 'Data', datasets);
     end            
@@ -496,13 +504,6 @@ function pushbutton_update_plots_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     update_plot(handles, 0);
-
-
-% --- Executes on button press in pushbutton_export.
-function pushbutton_export_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton_export (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -773,3 +774,68 @@ function menu_view_pan_Callback(hObject, eventdata, handles)
     pan(f, 'on');
     set(handles.menu_view_zoom, 'Checked', 'off');
     set(handles.menu_view_pan, 'Checked', 'on');
+
+
+% --------------------------------------------------------------------
+function file_menu_load_Callback(hObject, eventdata, handles)
+% hObject    handle to file_menu_load (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global actant_datasets;
+    global actant_files;
+    global actant_plot;
+    global g_file_types;
+    global g_type_idx;
+    % Select input file
+    [fn, fp, fi] = uigetfile(g_file_types(g_type_idx.actant_mat,:),...
+        'Select data file');
+    if fp == 0,
+        return;
+    end
+    file = [fp fn];
+    % Load and initialize controls
+    load(file, 'actant_datasets', 'actant_files', 'actant_plot');
+    data = get(handles.uitable_data, 'Data');
+    nums = {};
+    for i=1:length(actant_datasets),
+        ts = actant_datasets{i};
+        data{i, 1} = 'No';
+        data{i, 2} = [ts.Name ' (' ts.DataInfo.Units ')'];
+        data{i, 3} = datestr(min(ts.Time));
+        data{i, 4} = datestr(max(ts.Time));
+        % data{i, 5} = actant_files{i};           
+        nums{i} = num2str(i);
+    end
+    set(handles.uitable_data, 'Data', data);
+    set(handles.popupmenu_dataset, 'String', nums);
+    set(handles.edit_plots, 'String', num2str(actant_plot.subs));
+    set(handles.edit_days, 'String', num2str(actant_plot.days));
+    set(handles.edit_overlap, 'String', num2str(actant_plot.overlap));
+    if length(actant_plot.main_lim) > 1,
+        set(handles.edit_main_min, 'String', num2str(actant_plot.main_lim(1)));
+        set(handles.edit_main_max, 'String', num2str(actant_plot.main_lim(2)));
+    end
+    if length(actant_plot.top_lim) > 1,
+        set(handles.edit_top_min, 'String', num2str(actant_plot.top_lim(1)));
+        set(handles.edit_top_max, 'String', num2str(actant_plot.top_lim(2)));
+    end
+
+
+% --------------------------------------------------------------------
+function file_menu_save_Callback(hObject, eventdata, handles)
+% hObject    handle to file_menu_save (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global actant_datasets;
+    global actant_files;
+    global actant_plot;
+    global g_file_types;
+    global g_type_idx;
+    % Select output file
+    [fn, fp, fi] = uiputfile(g_file_types(g_type_idx.actant_mat,:),...
+        'Select data file');
+    if fp == 0,
+        return;
+    end
+    file = [fp fn];
+    save(file, 'actant_datasets', 'actant_files', 'actant_plot', '-v7.3');

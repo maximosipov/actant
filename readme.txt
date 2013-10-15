@@ -37,9 +37,9 @@ formats and analysis methods.
 1. Data formats
 ===============
 
-Actant reads data in Actiwatch, GENEActiv and Actopsy app (CSV) formats.
-Internally, all the data is represented as Matlab timeseries objects with
-the following names:
+Actant reads data in Actiwatch, GENEActiv, Actopsy app (CSV) and Actant
+own (MAT) formats. Internally, all datasets represented as Matlab
+timeseries objects with the following names:
 
   ACC - 3D accelerometry data (m/s^2 or g)
   ACT - activity data (counts or m/s^2 or g)
@@ -47,8 +47,8 @@ the following names:
   TEMP - temperature data (degC)
   BUTTON - button press indicators (binary)
   SPEED - distance travelled (km/h, inaccurate depending on location)
-  SMS - sms messages (days, each character counted as second)
-  CALL - phone calls (days)
+  TEXTS - sms messages (days, each character counted as second)
+  CALLS - phone calls (days)
 
 Plus, in future:
 
@@ -67,28 +67,37 @@ For unification of data analysis, all high-dimensional and high-sampling
 rate activity data can be converted to epochs, either Actiwatch compatible
 (counts) or as average acceleration per epoch (m/s^2).
 
+Actant MAT format includes Matlab variables to initialize Actant internal
+state, including datasets, analysis algorithm and results:
+
+  datasets - array of timeseries objects for datasets
+  files - array of filenames for 'datasets'
+  analysis
+    method - analysis method name
+    arguments - method arguments
+    results - results of analysis (except timeseries)
+
 2. Analysis methods
 ===================
 
-Analysis methods may generate scalar values, timeseries with values or
-timeseries with data markup. For example, non-linear activity analysis will
-generate L5, M10, RA, IS and IV values plus timeseries with segmentations
-of L5 and M10. Windowed spectral analysis will generate timeseries with
-spectral content of analyzed signal.
+Analysis methods may generate scalar values and timeseries (with values or
+data markup). For example, non-linear activity analysis will generate L5,
+M10, RA, IS and IV values plus timeseries with segmentations of L5 and M10.
+Windowed spectral analysis will generate timeseries with spectral content
+of analyzed signal.
 
 The API of analysis method is as following:
 
-function [ts, markup, vals] = actant_analysis(data, args)
+function [ts vals] = actant_analysis(data, args)
   Arguments:
     data - Input data timeseries
     args - Cell array of arguments
 
   Results (all optional):
     ts - Structure of timeseries
-    markup - Structure of data markups
     vals - Cell array of results
 
-When function called without arguments, array of function arguments and
+When method called without arguments, array of function arguments and
 default values is returned in vals, where the first element of array is '_'
 with the name of the analysis method as value.
 
