@@ -11,6 +11,9 @@ function status = convert_actopsy(fin, fout)
 %   fin - Actopsy CSV file name
 %   fout - Output MAT file name
 %
+% Results:
+%   status - Logical conversion status
+%
 % Copyright (C) 2013, Maxim Osipov
 %
 % All rights reserved.
@@ -52,23 +55,26 @@ typestr = fgets(fid);
 unitstr = fgets(fid);
 if strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n')),
     type = 1;
-    ts = activity_light(type, fid, fin);
+    act = activity_light(type, fid, fin);
+    save(fout, 'act', '-v7.3');
 elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
     type = 2;
-    ts = activity_light(type, fid, fin);
+    light = activity_light(type, fid, fin);
+    save(fout, 'light', '-v7.3');
 elseif strcmp(typestr, sprintf('NAME,LAT,LON\n')),
     type = 3;
-    ts = location(type, fid, fin);
+    speed = location(type, fid, fin);
+    save(fout, 'speed', '-v7.3');
 elseif strcmp(typestr, sprintf('NAME,TYPE,DIR,ID,LENGTH\n')),
     type = 4;
-    ts = calls_texts(type, fid, fin);
+    [calls texts] = calls_texts(type, fid, fin);
+    save(fout, 'calls', 'texts', '-v7.3');
 else
     errordlg(sprintf(['Unknown data\n' typestr unitstr]), 'Error', 'modal');
     return;
 end
 
 % Save file
-save(fout, 'ts', '-v7.3');
 fclose(fid);
 status = true;
 
@@ -199,12 +205,42 @@ function ts = location(type, fid, fin)
     close (hw);
 
 
-function ts = calls_texts(type, fid, fin)
-    ts_texts = timeseries('TEXTS');
-    ts_texts.DataInfo.Unit = 'days';
-    ts_texts.TimeInfo.Units = 'days';
-    ts_texts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-    ts_calls = timeseries('CALLS');
-    ts_calls.DataInfo.Unit = 'days';
-    ts_calls.TimeInfo.Units = 'days';
-    ts_calls.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+function [calls texts] = calls_texts(type, fid, fin)
+    texts = timeseries('TEXTS');
+    texts.DataInfo.Unit = 'days';
+    texts.TimeInfo.Units = 'days';
+    texts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    calls = timeseries('CALLS');
+    calls.DataInfo.Unit = 'days';
+    calls.TimeInfo.Units = 'days';
+    calls.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    % Read/convert data
+    hw = waitbar(0, 'Please wait while the data is converted...');
+    block = 100;
+    num_prev = '';
+    len_prev = 0;
+    while ~feof(fid),
+        tmp = textscan(fid, '%s%s%s%s%f', block, 'Delimiter', ',');
+        time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
+        type = tmp{2};
+        dir = tmp{3};
+        num = tmp{4};
+        len = tmp{5};
+        % calculate distance from previous point
+        for i=1:length(time),
+            % cannot really calculate momentary speed
+            if ~strcmp(num{i}, num_prev) && len(i) ~= len_prev,
+                if strcmp(type(i), 'Call'),
+                    texts = addsample(texts,...
+                        'Data', time(i) + len(i)/(24*60*60), 'Time', time(i));
+                elseif strcmp(type(i), 'Text'),
+                    calls = addsample(calls,...
+                        'Data', time(i) + len(i)/(24*60*60), 'Time', time(i));
+                end
+            end
+            num_prev = num(i);
+            len_prev = len(i);
+        end
+    end
+    waitbar(1, hw);
+    close (hw);
