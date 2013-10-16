@@ -1,15 +1,15 @@
-function out = load_actopsy(file)
+function ts = load_actopsy(file)
 % LOAD_ACTOPSY Load activity data from Actopsy CSV file
 %
 % Description:
 %   The function takes a CSV files with activity data from the Actopsy app
-%   and loads it into a timeseries object.
+%   and loads it into timeseries objects.
 %
 % Arguments:
 %   file - CSV file name
 %
 % Results:
-%   out - Structure with timeseries objects
+%   ts - Cell array of timeseries
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -65,3 +65,7 @@ out.acc_z = timeseries(tmp{4}, time, 'Name', 'ACCZ');
 out.acc_z.DataInfo.Unit = 'm/s^2';
 out.acc_z.TimeInfo.Units = 'days';
 out.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+ts{1} = out.acc_x;
+ts{2} = out.acc_y;
+ts{3} = out.acc_z;

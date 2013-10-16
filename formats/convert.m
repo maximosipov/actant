@@ -44,20 +44,15 @@ end
 % End initialization code - DO NOT EDIT
 
 global g_file_types;
-global g_in_type;
-global g_out_type;
-
-g_file_types = {
-    '*.awd', 'Actiwatch-L text files (*.awd)';...
-    '*.csv', 'GENEActiv CSV files (*.csv)';...
-    '*.mat', 'Actant MAT files (*.mat)';...
-    '*.bin', 'GENEActiv BIN files (*.bin)';...
-    '*.csv', 'Actopsy CSV files (*.csv)'
-};
+global g_type_idx;
+g_file_types = getappdata(0, 'g_file_types');
+g_type_idx = getappdata(0, 'g_type_idx');
 
 
 function status = file_convert(handles)
-    global g_in_type g_out_type;
+    global g_type_idx;
+    global g_in_type;
+    global g_out_type;
     % Get and check arguments
     status = false;
     fin = get(handles.text_input, 'String');
@@ -65,9 +60,11 @@ function status = file_convert(handles)
     fin_type = g_in_type;
     fout_type = g_out_type;
     % Perform conversion
-    if (fin_type == 4 && fout_type == 3),
+    if (fin_type == g_type_idx.geneactiv_bin &&...
+        fout_type == g_type_idx.actant_mat),
         status = convert_bin(fin, fout);
-    elseif (fin_type == 5 && fout_type == 3),
+    elseif (fin_type == g_type_idx.actopsy_csv &&...
+            fout_type == g_type_idx.actant_mat),
         status = convert_actopsy(fin, fout);
     end
 
@@ -214,7 +211,7 @@ function pushbutton_input_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     global g_file_types g_in_type;
     % get file name
-    [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
+    [fn, fp, fi] = uigetfile(g_file_types, 'Select input data file');
     if fp == 0,
         return;
     end
@@ -233,7 +230,7 @@ function pushbutton_output_Callback(hObject, eventdata, handles)
     % get selected type
     type_sel = get(handles.popupmenu_format, 'Value');
     % get file name
-    [fn, fp, fi] = uiputfile(g_file_types(type_sel,:), 'Select the data file');
+    [fn, fp, fi] = uiputfile(g_file_types(type_sel,:), 'Select output data file');
     if fp == 0,
         return;
     end

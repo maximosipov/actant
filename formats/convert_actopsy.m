@@ -55,20 +55,25 @@ typestr = fgets(fid);
 unitstr = fgets(fid);
 if strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n')),
     type = 1;
-    act = activity_light(type, fid, fin);
-    save(fout, 'act', '-v7.3');
+    actant_datasets{1} = activity_light(type, fid, fin);
+    actant_sources{1} = fin;
+    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
 elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
     type = 2;
-    light = activity_light(type, fid, fin);
-    save(fout, 'light', '-v7.3');
+    actant_datasets{1} = activity_light(type, fid, fin);
+    actant_sources{1} = fin;
+    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
 elseif strcmp(typestr, sprintf('NAME,LAT,LON\n')),
     type = 3;
-    speed = location(type, fid, fin);
-    save(fout, 'speed', '-v7.3');
+    actant_datasets{1} = location(type, fid, fin);
+    actant_sources{1} = fin;
+    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
 elseif strcmp(typestr, sprintf('NAME,TYPE,DIR,ID,LENGTH\n')),
     type = 4;
-    [calls texts] = calls_texts(type, fid, fin);
-    save(fout, 'calls', 'texts', '-v7.3');
+    [actant_datasets{1} actant_datasets{2}] = calls_texts(type, fid, fin);
+    actant_sources{1} = fin;
+    actant_sources{2} = fin;
+    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
 else
     errordlg(sprintf(['Unknown data\n' typestr unitstr]), 'Error', 'modal');
     return;

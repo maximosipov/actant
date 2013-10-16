@@ -1,15 +1,15 @@
-function out = load_geneactiv(file)
+function ts = load_geneactiv(file)
 % LOAD_GENEACTIV Load activity data from GENEActiv CSV file
 %
 % Description:
 %   The function takes a GENEActiv CSV file with activity data and loads it
-%   into a timeseries object.
+%   into timeseries objects.
 %
 % Arguments:
 %   file - CSV file name
 %
 % Results:
-%   out - Structure with timeseries objects
+%   ts - Cell array of timeseries
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -84,3 +84,9 @@ out.temp.DataInfo.Unit = 'degC';
 out.temp.TimeInfo.Units = 'days';
 out.temp.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
+ts{1} = out.acc_x;
+ts{2} = out.acc_y;
+ts{3} = out.acc_z;
+ts{4} = out.light;
+ts{5} = out.temp;
+ts{6} = out.button;

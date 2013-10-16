@@ -1,4 +1,5 @@
-function convert_bin(fin, fout)
+function status = convert_bin(fin, fout)
+    status = false;
     % display message that conversion can take a while
     % option for different save folder
     sel = questdlg({'Epoch length will not be used for this conversion.'...
@@ -31,9 +32,24 @@ function convert_bin(fin, fout)
     temp.DataInfo.Unit = 'degC';
     button = timeseries(button, time, 'Name', 'BUTTON');
     button.DataInfo.Unit = 'binary';
-    
+
+    actant_datasets{1} = acc_x;
+    actant_datasets{2} = acc_y;
+    actant_datasets{3} = acc_z;
+    actant_datasets{4} = light;
+    actant_datasets{5} = temp;
+    actant_datasets{6} = button;
+    actant_sources{1} = fin;
+    actant_sources{2} = fin;
+    actant_sources{3} = fin;
+    actant_sources{4} = fin;
+    actant_sources{5} = fin;
+    actant_sources{6} = fin;
+
     % save file
-    save(fout, 'acc_x', 'acc_y', 'acc_z', 'light',...
+    save(fout, 'actant_datasets', 'actant_sources',...
+        'acc_x', 'acc_y', 'acc_z', 'light',...
         'temp', 'button', 'header', '-v7.3');
     close(h)
+    status = true;
 end

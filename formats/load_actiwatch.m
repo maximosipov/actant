@@ -1,4 +1,4 @@
-function out = load_actiwatch(file)
+function ts = load_actiwatch(file)
 % LOAD_ACTIWATCH Load activity data from Actiwatch AWD file
 %
 % Description:
@@ -9,7 +9,7 @@ function out = load_actiwatch(file)
 %   file - Actiwatch AWD file name
 %
 % Results:
-%   out - Timeseries object with 'ACT' name and 'counts' units
+%   ts - Cell array of timeseries objects
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -78,3 +78,6 @@ out.light = timeseries(data(:, 2), time, 'Name', 'LIGHT');
 out.light.DataInfo.Unit = 'lux';
 out.light.TimeInfo.Units = 'days';
 out.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+ts{1} = out.act;
+ts{2} = out.light;

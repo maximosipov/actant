@@ -100,27 +100,31 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
     global g_type_idx;
     global g_plot_handle;
     g_file_types = {
+        '*.mat', 'Actant MAT files (*.mat)';...
         '*.awd', 'Actiwatch-L text files (*.awd)';...
         '*.csv', 'GENEActiv CSV files (*.csv)';...
-        '*.mat', 'Actant MAT files (*.mat)';...
+        '*.bin', 'GENEActiv BIN files (*.bin)';...
         '*.csv', 'Actopsy CSV files (*.csv)'
 	};
+    setappdata(0, 'g_file_types', g_file_types);
     g_type_idx = struct(...
-        'actiwatch_awd', 1, ...
-    	'geneactiv_csv', 2, ...
-        'actant_mat', 3, ...
-    	'actopsy_csv', 4 ...
+        'actant_mat', 1, ...
+        'actiwatch_awd', 2, ...
+    	'geneactiv_csv', 3, ...
+    	'geneactiv_bin', 4, ...
+    	'actopsy_csv', 5 ...
     );
+    setappdata(0, 'g_type_idx', g_type_idx);
     g_plot_handle = -1;
 
     %---------------------------------------------------------------------
     % Loadable context
-    global actant_files;
+    global actant_sources;
     global actant_datasets;
     global actant_plot;
     global actant_analysis;
 
-    actant_files = {};
+    actant_sources = {};
     actant_datasets = {};
     actant_plot = struct(...
         'subs', 5, ...
@@ -135,63 +139,136 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
         'results', [] ...
 	);
 
-    update_vslider(handles, 0);
+    update_slider(handles, 0);
 
 
-function load_file(handles)
-    global g_file_types;
+% --------------------------------------------------------------------
+% Load dataset
+function actant_open_dataset(fname, fi, handles)
     global g_type_idx;
-    global actant_files;
     global actant_datasets;
-    % get file name
-    [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
-    if fp == 0,
-        return;
-    end
-    % Get and check data file
-    new_file = [fp fn];
-    new_handle = fopen(new_file, 'r');
-    if new_handle == -1,
-        errordlg(['Could not open file' new_file], 'Error', 'modal');
-        return;
-    end
-    fclose(new_handle);
-    actant_files{size(actant_files, 2)+1} = new_file;
+    global actant_sources;
     % Load dataset
-    h = waitbar(0, 'Please wait while the data is loaded...');
     if fi == g_type_idx.actiwatch_awd,
-        data = load_actiwatch(new_file);
+        h = waitbar(0, 'Please wait while the data is loaded...');
+        data = load_actiwatch(fname);
+        waitbar(1, h);
+        close(h);
     elseif fi == g_type_idx.geneactiv_csv,
-        data = load_geneactiv(new_file);
+        h = waitbar(0, 'Please wait while the data is loaded...');
+        data = load_geneactiv(fname);
+        waitbar(1, h);
+        close(h);
     elseif fi == g_type_idx.actant_mat,
-        data = load(new_file);
+        h = waitbar(0, 'Please wait while the data is loaded...');
+        data = load(fname);
+        waitbar(1, h);
+        close(h);
     elseif fi == g_type_idx.actopsy_csv,
-        data = load_actopsy(new_file);
+        h = waitbar(0, 'Please wait while the data is loaded...');
+        data = load_actopsy(fname);
+        waitbar(1, h);
+        close(h);
+    else
+        errordlg('Format is not supported!', 'Error', 'modal');
+        return;
     end
-    waitbar(1, h);
-    close(h);
-    % Update data table
-    add_dataset(data, new_file, 'No', handles);
-    % Update analysis dataset selector
-    nums = {};
-    for i=1:size(actant_datasets, 2),
-        nums{i} = num2str(i);
+    % Update internal data
+    n = length(actant_datasets);
+    for i = 1:length(data),
+        actant_datasets{n+i} = data{i};
+        actant_sources{n+i} = fname;
     end
-    set(handles.popupmenu_dataset, 'String', nums);
 
   
-function update_plot(handles, slide)
+% --------------------------------------------------------------------
+% Perform analysis
+function actant_analyze(method, dataset, args, handles)
+    global actant_sources;
     global actant_datasets;
+    global actant_analysis;
+    % Perform analysis
+    h = waitbar(0, 'Please wait while analysis completes...');
+    [data, actant_analysis.results] = method(dataset, args);
+    waitbar(1, h);
+    close(h);
+    % Update internal state
+    if ~isempty(data),
+        n = length(actant_datasets);
+        for i = 1:length(data),
+            actant_datasets{n+i} = data{i};
+            actant_sources{n+i} = func2str(method);
+        end
+    end
+
+
+% --------------------------------------------------------------------
+% Load datasets to UI
+function actant_update_datasets(show, handles)
+    global actant_datasets;
+    global actant_sources;
+    datasets = get(handles.uitable_data, 'Data');
+    nums = {};
+    for i = 1:length(actant_datasets),
+        datasets{i, 1} = show;
+        datasets{i, 2} = [actant_datasets{i}.Name ' (' ...
+                          actant_datasets{i}.DataInfo.Units ')'];
+        datasets{i, 3} = datestr(min(actant_datasets{i}.Time));
+        datasets{i, 4} = datestr(max(actant_datasets{i}.Time));
+        datasets{i, 5} = actant_sources{i};
+        nums{i} = num2str(i);
+    end
+    set(handles.uitable_data, 'Data', datasets);
+    set(handles.popupmenu_dataset, 'String', nums);
+
+
+% --------------------------------------------------------------------
+% Update plot UI
+function actant_update_plot(slide, handles)
     global actant_plot;
     if ~chknum(handles.edit_plots) || ~chknum(handles.edit_days) ||...
             ~chknum(handles.edit_overlap),
         return;
     end
     % get timeseries to display
-    ts_main = [];
-    idx_main = get_plot_index('Main', handles);
-    if idx_main > 0,
-        ts_main = actant_datasets{idx_main};
+    ts_main = get_plot_data('Main', handles);
+    ts_top = get_plot_data('Top', handles);
+    ts_markup = get_plot_data('Markup', handles);
+    if isempty(ts_main),
+        errordlg('Please select the main plot!', 'Error', 'modal');
+        return;
+    end
+    % Update limits
+    actant_update_limits(ts_main, ts_top, handles);
+    % Update screen title
+    title = ts_main.Name;
+    if ~isempty(ts_top),
+        title = [title ' : ' ts_top.Name];
+    end
+    if ~isempty(ts_markup),
+        title = [title ' : ' ts_markup.Name];
+    end
+    set(handles.uipanel_plot, 'Title', title);
+    % get plot start time
+    if slide == 0,
+        update_slider(handles, 1, floor(min(ts_main.Time)), floor(max(ts_main.Time)), 1);
+    end
+    start = floor(min(ts_main.Time));
+    sval = get(handles.slider_v, 'Value');
+    smax = get(handles.slider_v, 'Max');
+    smin = get(handles.slider_v, 'Min');
+    % Plot
+    plot_days(handles.uipanel_plot, start + smax - sval,...
+                actant_plot.subs, actant_plot.days, actant_plot.overlap,...
+                ts_main, ts_top, ts_markup,...
+                actant_plot.main_lim, actant_plot.top_lim);
+
+    
+% --------------------------------------------------------------------
+% Update plot UI
+function actant_update_limits(ts_main, ts_top, handles)
+    global actant_plot;
+    if ~isempty(ts_main),
         % Update limits
         if isempty(get(handles.edit_main_min, 'String')) ||...
                 isempty(get(handles.edit_main_max, 'String')),
@@ -204,14 +281,8 @@ function update_plot(handles, slide)
         main_min = get(handles.edit_main_min, 'String');
         main_max = get(handles.edit_main_max, 'String');
         actant_plot.main_lim = [str2double(main_min) str2double(main_max)];
-    else
-        errordlg('Please select the main plot!', 'Error', 'modal');
-        return;
     end
-    ts_top = [];
-    idx_top = get_plot_index('Top', handles);
-    if idx_top > 0,
-        ts_top = actant_datasets{idx_top};
+    if ~isempty(ts_top),
         % Update limits
         if isempty(get(handles.edit_top_min, 'String')) ||...
                 isempty(get(handles.edit_top_max, 'String')),
@@ -225,66 +296,13 @@ function update_plot(handles, slide)
         top_max = get(handles.edit_top_max, 'String');
         actant_plot.top_lim = [str2double(top_min) str2double(top_max)];
     end
-    ts_markup = [];
-    idx_markup = get_plot_index('Markup', handles);
-    if idx_markup > 0,
-        ts_markup = actant_datasets{idx_markup};
-    end
-    % Update screen title
-    dataset = get(handles.uitable_data, 'Data');
-    set(handles.uipanel_plot, 'Title', dataset{idx_main, 5});
-    % get plot start time
-    if slide == 0,
-        update_vslider(handles, 1, floor(min(ts_main.Time)), floor(max(ts_main.Time)), 1);
-    end
-    start = floor(min(ts_main.Time));
-    sval = get(handles.slider_v, 'Value');
-    smax = get(handles.slider_v, 'Max');
-    smin = get(handles.slider_v, 'Min');
-    % get number of plots, days and overlap
-    val = get(handles.edit_plots, 'String');
-    actant_plot.subs = str2double(val);
-    val = get(handles.edit_days, 'String');
-    actant_plot.days = str2double(val);
-    val = get(handles.edit_overlap, 'String');
-    actant_plot.overlap = str2double(val);
-    % Plot
-    plot_days(handles.uipanel_plot, start + smax - sval,...
-                actant_plot.subs, actant_plot.days, actant_plot.overlap,...
-                ts_main, ts_top, ts_markup,...
-                actant_plot.main_lim, actant_plot.top_lim);
-
-    
-function setup_analysis(func, handles)
-    global actant_analysis;
-    actant_analysis.method = func2str(func);
-    [~, actant_analysis.args] = func();
-    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
-function analyze(handles)
-    global actant_datasets;
-    global actant_analysis;
-    analysis_args = get(handles.uitable_analysis, 'Data');
-    n = get(handles.popupmenu_dataset, 'Value');
-    if strcmp(actant_analysis.method, '_'),
-        errordlg('Please select analysis method!', 'Error', 'modal');
-        return;
-    end
-    h = waitbar(0, 'Please wait while analysis completes...');
-    func = str2func(actant_analysis.method);
-    [ts, actant_analysis.results] = func(actant_datasets{n}, analysis_args);
-    waitbar(1, h);
-    close(h);
-    if ~isempty(ts),
-        add_dataset(ts, analysis_args{1,2}, 'No', handles);
-    end
-    set(handles.uitable_results, 'Data', actant_analysis.results);
-
-
-function update_vslider(handles, enable, first, last, step, handler)
-    global actant_files;
-    if enable == 0 || size(actant_files, 2) < 1,
+% --------------------------------------------------------------------
+% Update slider UI
+function update_slider(handles, enable, first, last, step, handler)
+    global actant_sources;
+    if enable == 0 || size(actant_sources, 2) < 1,
         set(handles.slider_v, 'Enable', 'off');
     else
         set(handles.slider_v, 'Enable', 'on');
@@ -297,52 +315,22 @@ function update_vslider(handles, enable, first, last, step, handler)
     end
 
 
-function index = get_plot_index(type, handles)
-    index = 0;
+% --------------------------------------------------------------------
+% Get index of plot with specified display type
+function ts = get_plot_data(show, handles)
+    global actant_datasets;
+    ts = [];
     dataset = get(handles.uitable_data, 'Data');
     for i=1:size(dataset, 1),
-        if strcmp(dataset{i}, type),
-            index = i;
+        if strcmp(dataset{i}, show),
+            ts = actant_datasets{i};
             return;
         end
     end
 
 
-function add_dataset(data, new_name, new_show, handles)
-    global actant_datasets;
-    datasets = get(handles.uitable_data, 'Data');
-    row = size(datasets, 1) + 1;
-    % number of time series in the loaded file
-    if isstruct(data),
-        field_names = fieldnames(data);
-        for i = 1:numel(field_names),
-            % get the first field
-            ts_tmp = getfield(data, char(field_names(i)));
-            % check if field is a time series
-            if strcmpi(class(ts_tmp), 'timeseries')
-                datasets{row, 1} = new_show;
-                datasets{row, 2} = [ts_tmp.Name ' (' ts_tmp.DataInfo.Units ')'];
-                datasets{row, 3} = datestr(min(ts_tmp.Time));
-                datasets{row, 4} = datestr(max(ts_tmp.Time));
-                datasets{row, 5} = new_name;
-                row = row + 1;
-                actant_datasets{size(actant_datasets, 2)+1} = ts_tmp;
-            end
-        end
-    else
-        for i = 1:length(data),
-            datasets{row, 1} = new_show;
-            datasets{row, 2} = [data{i}.Name ' (' data{i}.DataInfo.Units ')'];
-            datasets{row, 3} = datestr(min(data{i}.Time));
-            datasets{row, 4} = datestr(max(data{i}.Time));
-            datasets{row, 5} = new_name;           
-            row = row + 1;
-            actant_datasets{size(actant_datasets, 2)+1} = data{i};
-        end
-    end
-    set(handles.uitable_data, 'Data', datasets);
-
-
+% --------------------------------------------------------------------
+% Check if edit control contains number
 function status = chknum(h)
     status = false;
     str = get(h, 'String');
@@ -384,7 +372,24 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_file_open (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    load_file(handles);
+    global g_file_types;
+    % Get file name
+    [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
+    if fp == 0,
+        return;
+    end
+    % Get and check data file
+    fname = [fp fn];
+    fhandle = fopen(fname, 'r');
+    if fhandle == -1,
+        errordlg(['Could not open file' fname], 'Error', 'modal');
+        return;
+    end
+    fclose(fhandle);
+    % Load data
+    actant_open_dataset(fname, fi, handles);
+    % Update datasets
+    actant_update_datasets('No', handles);
 
 
 % --------------------------------------------------------------------
@@ -422,7 +427,10 @@ function menu_sleep_scoring_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_sleep_scoring (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_sleepscoring, handles)
+    global actant_analysis;
+    actant_analysis.method = 'actant_sleepscoring';
+    [~, actant_analysis.args] = actant_sleepscoring();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 % --------------------------------------------------------------------
@@ -458,7 +466,10 @@ function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_rhythm_nonparam (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_activity, handles)
+    global actant_analysis;
+    actant_analysis.method = 'actant_activity';
+    [~, actant_analysis.args] = actant_activity();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 % --------------------------------------------------------------------
@@ -473,7 +484,10 @@ function menu_entropy_sampen_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_entropy_sampen (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_sampen, handles)
+    global actant_analysis;
+    actant_analysis.method = 'actant_sampen';
+    [~, actant_analysis.args] = actant_sampen();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 % --------------------------------------------------------------------
@@ -481,7 +495,10 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_entropy_mse (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    setup_analysis(@actant_mse, handles)
+    global actant_analysis;
+    actant_analysis.method = 'actant_mse';
+    [~, actant_analysis.args] = actant_mse();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 % --------------------------------------------------------------------
@@ -507,15 +524,31 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_analyze (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    analyze(handles);
+    global actant_datasets;
+    global actant_analysis;
+    % Get and check arguments
+    args = get(handles.uitable_analysis, 'Data');
+    if strcmp(actant_analysis.method, '_'),
+        errordlg('Please select analysis method!', 'Error', 'modal');
+        return;
+    end
+    n = get(handles.popupmenu_dataset, 'Value');
+    dataset = actant_datasets{n};
+    method = str2func(actant_analysis.method);
+    % Perform analysis
+    actant_analyze(method, dataset, args, handles);
+    % Update datasets
+    actant_update_datasets('No', handles);
+    % Update resutls
+    set(handles.uitable_results, 'Data', actant_analysis.results);
 
 
-% --- Executes on button press in pushbutton_update_plots.
+% --- Executes on button press in pushbutton_s.
 function pushbutton_update_plots_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_update_plots (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    update_plot(handles, 0);
+    actant_update_plot(0, handles);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -528,7 +561,11 @@ function edit_plots_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_plots as text
 %        str2double(get(hObject,'String')) returns contents of edit_plots as a double
-    chknum(handles.edit_plots);
+    global actant_plot;
+    if chknum(handles.edit_plots), 
+        val = get(handles.edit_plots, 'String');
+        actant_plot.subs = str2double(val);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -551,7 +588,11 @@ function edit_days_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_days as text
 %        str2double(get(hObject,'String')) returns contents of edit_days as a double
-    chknum(handles.edit_days);
+    global actant_plot;
+    if chknum(handles.edit_days),
+        val = get(handles.edit_days, 'String');
+        actant_plot.days = str2double(val);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -574,7 +615,11 @@ function edit_overlap_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_overlap as text
 %        str2double(get(hObject,'String')) returns contents of edit_overlap as a double
-    chknum(handles.edit_overlap);
+    global actant_plot;
+    if chknum(handles.edit_overlap),
+        val = get(handles.edit_overlap, 'String');
+        actant_plot.overlap = str2double(val);
+    end
 
 
 % --- Executes during object creation, after setting all properties.
@@ -737,7 +782,7 @@ function slider_v_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-    update_plot(handles, 1);
+    actant_update_plot(1, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -794,7 +839,7 @@ function file_menu_load_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global actant_datasets;
-    global actant_files;
+    global actant_sources;
     global actant_plot;
     global actant_analysis;
     global g_file_types;
@@ -806,21 +851,10 @@ function file_menu_load_Callback(hObject, eventdata, handles)
         return;
     end
     file = [fp fn];
-    load(file, 'actant_datasets', 'actant_files', 'actant_plot', 'actant_analysis');
-    % Initialize datasets table
-    data = get(handles.uitable_data, 'Data');
-    nums = {};
-    for i=1:length(actant_datasets),
-        ts = actant_datasets{i};
-        data{i, 1} = 'No';
-        data{i, 2} = [ts.Name ' (' ts.DataInfo.Units ')'];
-        data{i, 3} = datestr(min(ts.Time));
-        data{i, 4} = datestr(max(ts.Time));
-        % data{i, 5} = actant_files{i};           
-        nums{i} = num2str(i);
-    end
-    set(handles.uitable_data, 'Data', data);
-    set(handles.popupmenu_dataset, 'String', nums);
+    load(file, 'actant_datasets', 'actant_sources', 'actant_plot', 'actant_analysis');
+    % Update GUI
+    actant_update_datasets('No', handles);
+    actant_update_results(handles);
     % Initialize settings screen
     set(handles.edit_plots, 'String', num2str(actant_plot.subs));
     set(handles.edit_days, 'String', num2str(actant_plot.days));
@@ -844,7 +878,7 @@ function file_menu_save_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global actant_datasets;
-    global actant_files;
+    global actant_sources;
     global actant_plot;
     global actant_analysis;
     global g_file_types;
@@ -856,5 +890,5 @@ function file_menu_save_Callback(hObject, eventdata, handles)
         return;
     end
     file = [fp fn];
-    save(file, 'actant_datasets', 'actant_files', 'actant_plot',...
+    save(file, 'actant_datasets', 'actant_sources', 'actant_plot',...
         'actant_analysis', '-v7.3');
