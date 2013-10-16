@@ -1,16 +1,15 @@
-function [ts, markup, vals] = actant_sampen(data, args)
+function [ts, vals] = actant_mse(data, args)
 % ACTANT_SAMPEN Wrapper function for SAMPEN
 %
 % Description:
-%   The function wraps sampen to provide ACTANT compatible interface.
+%   The function wraps MSE to provide ACTANT compatible interface.
 %
 % Arguments:
 %   data - input data timeseries
 %   args - Cell array of arguments
 %
 % Results (all optional):
-%   ts - Generated timeseries
-%   markup - Generated data markup
+%   ts - Cell array of timeseries
 %   vals - Cell array of results
 %
 % When function called without arguments, array of function arguments and
@@ -46,8 +45,7 @@ function [ts, markup, vals] = actant_sampen(data, args)
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
 
-ts = [];
-markup = [];
+ts = {};
 vals = {};
 
 % No arguments passed - return arguments definition

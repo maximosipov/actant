@@ -166,7 +166,7 @@ function load_file(handles)
     elseif fi == g_type_idx.actant_mat,
         data = load(new_file);
     elseif fi == g_type_idx.actopsy_csv,
-        data = load_actopsy(new_file);       
+        data = load_actopsy(new_file);
     end
     waitbar(1, h);
     close(h);
@@ -258,7 +258,7 @@ function update_plot(handles, slide)
 function setup_analysis(func, handles)
     global actant_analysis;
     actant_analysis.method = func2str(func);
-    [~, ~, actant_analysis.args] = func();
+    [~, actant_analysis.args] = func();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
@@ -273,14 +273,11 @@ function analyze(handles)
     end
     h = waitbar(0, 'Please wait while analysis completes...');
     func = str2func(actant_analysis.method);
-    [ts, markup, actant_analysis.results] = func(actant_datasets{n}, analysis_args);
+    [ts, actant_analysis.results] = func(actant_datasets{n}, analysis_args);
     waitbar(1, h);
     close(h);
     if ~isempty(ts),
-        add_dataset(ts, analysis_args{1,2}, 'Top', handles);
-    end
-    if ~isempty(markup),
-        add_dataset(markup, analysis_args{1,2}, 'No', handles);
+        add_dataset(ts, analysis_args{1,2}, 'No', handles);
     end
     set(handles.uitable_results, 'Data', actant_analysis.results);
 
@@ -316,22 +313,34 @@ function add_dataset(data, new_name, new_show, handles)
     datasets = get(handles.uitable_data, 'Data');
     row = size(datasets, 1) + 1;
     % number of time series in the loaded file
-    field_names = fieldnames(data);
-    for i = 1:numel(field_names)
-        % get the first field
-        ts_tmp = getfield(data, char(field_names(i))); 
-        % check if field is a time series
-        if strcmpi(class(ts_tmp), 'timeseries')
+    if isstruct(data),
+        field_names = fieldnames(data);
+        for i = 1:numel(field_names),
+            % get the first field
+            ts_tmp = getfield(data, char(field_names(i)));
+            % check if field is a time series
+            if strcmpi(class(ts_tmp), 'timeseries')
+                datasets{row, 1} = new_show;
+                datasets{row, 2} = [ts_tmp.Name ' (' ts_tmp.DataInfo.Units ')'];
+                datasets{row, 3} = datestr(min(ts_tmp.Time));
+                datasets{row, 4} = datestr(max(ts_tmp.Time));
+                datasets{row, 5} = new_name;
+                row = row + 1;
+                actant_datasets{size(actant_datasets, 2)+1} = ts_tmp;
+            end
+        end
+    else
+        for i = 1:length(data),
             datasets{row, 1} = new_show;
-            datasets{row, 2} = [ts_tmp.Name ' (' ts_tmp.DataInfo.Units ')'];
-            datasets{row, 3} = datestr(min(ts_tmp.Time));
-            datasets{row, 4} = datestr(max(ts_tmp.Time));
+            datasets{row, 2} = [data{i}.Name ' (' data{i}.DataInfo.Units ')'];
+            datasets{row, 3} = datestr(min(data{i}.Time));
+            datasets{row, 4} = datestr(max(data{i}.Time));
             datasets{row, 5} = new_name;           
             row = row + 1;
-            actant_datasets{size(actant_datasets, 2)+1} = ts_tmp;
+            actant_datasets{size(actant_datasets, 2)+1} = data{i};
         end
-        set(handles.uitable_data, 'Data', datasets);
-    end            
+    end
+    set(handles.uitable_data, 'Data', datasets);
 
 
 function status = chknum(h)

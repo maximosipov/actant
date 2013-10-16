@@ -1,4 +1,4 @@
-function [ts, markup, vals] = actant_sleepscoring(data, args)
+function [ts, vals] = actant_sleepscoring(data, args)
 % ACTANT_SLEEPSCORING Wrapper function for SLEEPSCORING
 %
 % Description:
@@ -9,8 +9,7 @@ function [ts, markup, vals] = actant_sleepscoring(data, args)
 %   args - Cell array of arguments
 %
 % Results (all optional):
-%   ts - Structure of timeseries
-%   markup - Structure of data markups
+%   ts - Cell array of timeseries
 %   vals - Cell array of results
 %
 % When function called without arguments, array of function arguments and
@@ -46,8 +45,7 @@ function [ts, markup, vals] = actant_sleepscoring(data, args)
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
 
-ts = [];
-markup = [];
+ts = {};
 vals = {};
 
 % No arguments passed - return arguments definition

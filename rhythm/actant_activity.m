@@ -1,16 +1,16 @@
-function [ts, markup, vals] = actant_activity(data, args)
+function [ts, vals] = actant_activity(data, args)
 % ACTANT_ACTIVITY Wrapper function for ACTIVITY
 %
 % Description:
-%   The function wraps sampen to provide ACTANT compatible interface.
+%   The function wraps non-parametric activity analysis to provide ACTANT
+%   compatible interface.
 %
 % Arguments:
 %   data - input data timeseries
 %   args - Cell array of arguments
 %
 % Results (all optional):
-%   ts - Structure of timeseries
-%   markup - Structure of data markups
+%   ts - Cell array of timeseries
 %   vals - Cell array of results
 %
 % When function called without arguments, array of function arguments and
@@ -46,8 +46,7 @@ function [ts, markup, vals] = actant_activity(data, args)
 % OF THE POSSIBILITY OF SUCH DAMAGE.
 %
 
-ts = [];
-markup = [];
+ts = {};
 vals = {};
 
 % No arguments passed - return arguments definition
@@ -59,8 +58,8 @@ end
 % We had some arguments - perform analysis
 data_arg = data.Data;
 
-[markup.l5, markup.m10] = l5m10(data);
-[is, iv, l5, m10, ra] = activity(data, markup.l5, markup.m10);
+[ts{1} ts{2}] = l5m10(data);
+[is, iv, l5, m10, ra] = activity(data, ts{1}, ts{2});
 
 vals{1, 1} = 'IS'; vals{1, 2} = num2str(is); 
 vals{2, 1} = 'IV'; vals{2, 2} = num2str(iv); 

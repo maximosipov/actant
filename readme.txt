@@ -94,7 +94,7 @@ function [ts vals] = actant_analysis(data, args)
     args - Cell array of arguments
 
   Results (all optional):
-    ts - Structure of timeseries
+    ts - Cell array of timeseries
     vals - Cell array of results
 
 When method called without arguments, array of function arguments and
