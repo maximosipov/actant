@@ -161,7 +161,8 @@ function actant_open_dataset(fname, fi, handles)
         close(h);
     elseif fi == g_type_idx.actant_mat,
         h = waitbar(0, 'Please wait while the data is loaded...');
-        data = load(fname);
+        tmp = load(fname);
+        data = tmp.actant_datasets;
         waitbar(1, h);
         close(h);
     elseif fi == g_type_idx.actopsy_csv,
@@ -204,13 +205,15 @@ function actant_analyze(method, dataset, args, handles)
 
 % --------------------------------------------------------------------
 % Load datasets to UI
-function actant_update_datasets(show, handles)
+function actant_update_datasets(handles)
     global actant_datasets;
     global actant_sources;
     datasets = get(handles.uitable_data, 'Data');
     nums = {};
     for i = 1:length(actant_datasets),
-        datasets{i, 1} = show;
+        if i > size(datasets, 1),
+            datasets{i, 1} = 'No';
+        end
         datasets{i, 2} = [actant_datasets{i}.Name ' (' ...
                           actant_datasets{i}.DataInfo.Units ')'];
         datasets{i, 3} = datestr(min(actant_datasets{i}.Time));
@@ -389,7 +392,7 @@ function menu_file_open_Callback(hObject, eventdata, handles)
     % Load data
     actant_open_dataset(fname, fi, handles);
     % Update datasets
-    actant_update_datasets('No', handles);
+    actant_update_datasets(handles);
 
 
 % --------------------------------------------------------------------
@@ -538,7 +541,7 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     % Perform analysis
     actant_analyze(method, dataset, args, handles);
     % Update datasets
-    actant_update_datasets('No', handles);
+    actant_update_datasets(handles);
     % Update resutls
     set(handles.uitable_results, 'Data', actant_analysis.results);
 
@@ -818,6 +821,7 @@ function menu_view_zoom_Callback(hObject, eventdata, handles)
     set(handles.menu_view_pan, 'Checked', 'off');
     set(handles.menu_view_zoom, 'Checked', 'on');
 
+
 % --------------------------------------------------------------------
 function menu_view_pan_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_view_pan (see GCBO)
@@ -853,9 +857,7 @@ function file_menu_load_Callback(hObject, eventdata, handles)
     file = [fp fn];
     load(file, 'actant_datasets', 'actant_sources', 'actant_plot', 'actant_analysis');
     % Update GUI
-    actant_update_datasets('No', handles);
-    actant_update_results(handles);
-    % Initialize settings screen
+    actant_update_datasets(handles);
     set(handles.edit_plots, 'String', num2str(actant_plot.subs));
     set(handles.edit_days, 'String', num2str(actant_plot.days));
     set(handles.edit_overlap, 'String', num2str(actant_plot.overlap));
@@ -867,7 +869,6 @@ function file_menu_load_Callback(hObject, eventdata, handles)
         set(handles.edit_top_min, 'String', num2str(actant_plot.top_lim(1)));
         set(handles.edit_top_max, 'String', num2str(actant_plot.top_lim(2)));
     end
-    % Initialize analysis
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
     set(handles.uitable_results, 'Data', actant_analysis.results);
 

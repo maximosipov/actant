@@ -74,6 +74,20 @@ elseif strcmp(typestr, sprintf('NAME,TYPE,DIR,ID,LENGTH\n')),
     actant_sources{1} = fin;
     actant_sources{2} = fin;
     save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+elseif strcmp(typestr, sprintf('NAME,HAPPY+,CONFIDENT+,SLEEP-,TALK+,ACTIVITY+,ALTMAN\r\n')),
+    type = 5;
+    actant_datasets = altman(type, fid, fin);
+    for i=1:length(actant_datasets),
+        actant_sources{i} = fin;
+    end
+    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+elseif strcmp(typestr, sprintf('NAME,ASLEEP,NIGHT_WAKE,EARLY_WAKE,SLEEP+,SAD+,APPETITE-,APPETITE+,WEIGHT-,WEIGHT+,CONCENTRATION,SELF-,SUICIDE,INTEREST-,ENERGY-,SLOW+,RESTLESS+,QIDS\r\n')),
+    type = 6;
+    actant_datasets = qids(type, fid, fin);
+    for i=1:length(actant_datasets),
+        actant_sources{i} = fin;
+    end
+    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
 else
     errordlg(sprintf(['Unknown data\n' typestr unitstr]), 'Error', 'modal');
     return;
@@ -246,6 +260,63 @@ function [calls texts] = calls_texts(type, fid, fin)
             num_prev = num(i);
             len_prev = len(i);
         end
+    end
+    waitbar(1, hw);
+    close (hw);
+
+
+function altman = altman(type, fid, fin)
+    altman{1} = timeseries('HAPPY+');
+    altman{2} = timeseries('CONFIDENT+');
+    altman{3} = timeseries('SLEEP-');
+    altman{4} = timeseries('TALK+');
+    altman{5} = timeseries('ACTIVITY+');
+    altman{6} = timeseries('ALTMAN');
+    for i=1:length(altman),
+        altman{i}.DataInfo.Unit = 'days';
+        altman{i}.TimeInfo.Units = 'days';
+        altman{i}.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    end
+    % Read/convert data
+    hw = waitbar(0, 'Please wait while the data is converted...');
+    tmp = textscan(fid, '%s%f%f%f%f%f%f', 'Delimiter', ',');
+    time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS');
+    for i=1:length(altman),
+        altman{i} = addsample(altman{i}, 'Data', tmp{i+1}, 'Time', time);
+    end
+    waitbar(1, hw);
+    close (hw);
+
+
+function qids = qids(type, fid, fin)
+    qids{1} = timeseries('ASLEEP');
+    qids{2} = timeseries('NIGHT_WAKE');
+    qids{3} = timeseries('EARLY_WAKE');
+    qids{4} = timeseries('SLEEP+');
+    qids{5} = timeseries('SAD+');
+    qids{6} = timeseries('APPETITE-');
+    qids{7} = timeseries('APPETITE+');
+    qids{8} = timeseries('WEIGHT-');
+    qids{9} = timeseries('WEIGHT+');
+    qids{10} = timeseries('CONCENTRATION');
+    qids{11} = timeseries('SELF-');
+    qids{12} = timeseries('SUICIDE');
+    qids{13} = timeseries('INTEREST-');
+    qids{14} = timeseries('ENERGY-');
+    qids{15} = timeseries('SLOW+');
+    qids{16} = timeseries('RESTLESS+');
+    qids{17} = timeseries('QIDS');
+    for i=1:length(qids),
+        qids{i}.DataInfo.Unit = 'days';
+        qids{i}.TimeInfo.Units = 'days';
+        qids{i}.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    end
+    % Read/convert data
+    hw = waitbar(0, 'Please wait while the data is converted...');
+    tmp = textscan(fid, '%s%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f', 'Delimiter', ',');
+    time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS');
+    for i=1:length(qids),
+        qids{i} = addsample(qids{i}, 'Data', tmp{i+1}, 'Time', time);
     end
     waitbar(1, hw);
     close (hw);
