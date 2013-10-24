@@ -9,7 +9,7 @@ function ts = load_geneactiv(file)
 %   file - CSV file name
 %
 % Results:
-%   ts - Cell array of timeseries
+%   ts - Structure of timeseries
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -41,7 +41,8 @@ function ts = load_geneactiv(file)
 
 fid = fopen(file, 'r');
 if (fid == -1)
-    error('Could not open file %s', file);
+    errordlg(['Could not open file ' file], 'Error', 'modal');
+    return;
 end
 
 % read activity data
@@ -54,39 +55,32 @@ fclose(fid);
 time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS:FFF');
 
 % create timeseries
-out.acc_x = timeseries(tmp{2}, time, 'Name', 'ACCX');
-out.acc_x.DataInfo.Unit = 'g';
-out.acc_x.TimeInfo.Units = 'days';
-out.acc_x.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+ts.acc_x = timeseries(tmp{2}, time, 'Name', 'ACCX');
+ts.acc_x.DataInfo.Unit = 'g';
+ts.acc_x.TimeInfo.Units = 'days';
+ts.acc_x.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
-out.acc_y = timeseries(tmp{3}, time, 'Name', 'ACCY');
-out.acc_y.DataInfo.Unit = 'g';
-out.acc_y.TimeInfo.Units = 'days';
-out.acc_y.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+ts.acc_y = timeseries(tmp{3}, time, 'Name', 'ACCY');
+ts.acc_y.DataInfo.Unit = 'g';
+ts.acc_y.TimeInfo.Units = 'days';
+ts.acc_y.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
-out.acc_z = timeseries(tmp{4}, time, 'Name', 'ACCZ');
-out.acc_z.DataInfo.Unit = 'g';
-out.acc_z.TimeInfo.Units = 'days';
-out.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+ts.acc_z = timeseries(tmp{4}, time, 'Name', 'ACCZ');
+ts.acc_z.DataInfo.Unit = 'g';
+ts.acc_z.TimeInfo.Units = 'days';
+ts.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
-out.light = timeseries(tmp{5}, time, 'Name', 'LIGHT');
-out.light.DataInfo.Unit = 'lux';
-out.light.TimeInfo.Units = 'days';
-out.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+ts.light = timeseries(tmp{5}, time, 'Name', 'LIGHT');
+ts.light.DataInfo.Unit = 'lux';
+ts.light.TimeInfo.Units = 'days';
+ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
-out.button = timeseries(tmp{6}, time, 'Name', 'BUTTON');
-out.button.DataInfo.Unit = 'binary';
-out.button.TimeInfo.Units = 'days';
-out.button.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+ts.button = timeseries(tmp{6}, time, 'Name', 'BUTTON');
+ts.button.DataInfo.Unit = 'binary';
+ts.button.TimeInfo.Units = 'days';
+ts.button.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
-out.temp = timeseries(tmp{7}, time, 'Name', 'TEMP');
-out.temp.DataInfo.Unit = 'degC';
-out.temp.TimeInfo.Units = 'days';
-out.temp.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-
-ts{1} = out.acc_x;
-ts{2} = out.acc_y;
-ts{3} = out.acc_z;
-ts{4} = out.light;
-ts{5} = out.temp;
-ts{6} = out.button;
+ts.temp = timeseries(tmp{7}, time, 'Name', 'TEMP');
+ts.temp.DataInfo.Unit = 'degC';
+ts.temp.TimeInfo.Units = 'days';
+ts.temp.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';

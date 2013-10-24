@@ -57,6 +57,19 @@ Plus, in future:
   PRES - atmospheric pressure (mbar)
   HR - heart rate (bpm)
 
+Other timeseries are possible with specific measures, for example mood
+ratings from questionnaires.
+
+Data load methods have the following interface:
+
+function ts = load_format(file)
+  Arguments:
+    file - File name
+
+  Results:
+    ts - Structure of time series
+
+
 Additionally, markup timeseries can be generated using analysis algorithms,
 where time vector represents starting points of marked intervals and data
 vector represents end points (as datenum).
@@ -70,12 +83,13 @@ rate activity data can be converted to epochs, either Actiwatch compatible
 Actant MAT format includes Matlab variables to initialize Actant internal
 state, including datasets, analysis algorithm and results:
 
-  datasets - array of timeseries objects for datasets
-  files - array of filenames for 'datasets'
-  analysis
+  actant_datasets - cell array of timeseries objects for datasets
+  actant_sources - cell array of sources (files or analysis) for 'datasets'
+  actant_plot - values for display characteristics
+  actant_analysis
     method - analysis method name (matlab function name)
-    args - method arguments
-    results - results of analysis (except timeseries)
+    args - cell array method arguments
+    results - cell array results of analysis (except timeseries)
 
 2. Analysis methods
 ===================

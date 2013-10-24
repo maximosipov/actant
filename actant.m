@@ -161,8 +161,7 @@ function actant_open_dataset(fname, fi, handles)
         close(h);
     elseif fi == g_type_idx.actant_mat,
         h = waitbar(0, 'Please wait while the data is loaded...');
-        tmp = load(fname);
-        data = tmp.actant_datasets;
+        data = load(fname);
         waitbar(1, h);
         close(h);
     elseif fi == g_type_idx.actopsy_csv,
@@ -176,9 +175,14 @@ function actant_open_dataset(fname, fi, handles)
     end
     % Update internal data
     n = length(actant_datasets);
-    for i = 1:length(data),
-        actant_datasets{n+i} = data{i};
-        actant_sources{n+i} = fname;
+    field_names = fieldnames(data);
+    for i = 1:numel(field_names),
+        tmp = getfield(data, char(field_names(i)));
+        if strcmpi(class(tmp), 'timeseries')
+            n = n + 1;
+            actant_datasets{n} = tmp;
+            actant_sources{n} = fname;
+        end
     end
 
   

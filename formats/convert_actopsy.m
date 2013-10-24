@@ -1,4 +1,4 @@
-function status = convert_actopsy(fin, fout)
+function status = convert_actopsy(fin, fout, epoch)
 % LOAD_ACTOPSY Convert data from Actopsy CSV files to plain Actant MAT
 %
 % Description:
@@ -10,6 +10,7 @@ function status = convert_actopsy(fin, fout)
 % Arguments:
 %   fin - Actopsy CSV file name
 %   fout - Output MAT file name
+%   epoch - Optional epoch length in seconds
 %
 % Results:
 %   status - Logical conversion status
@@ -54,106 +55,90 @@ end
 typestr = fgets(fid);
 unitstr = fgets(fid);
 if strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n')),
-    type = 1;
-    actant_datasets{1} = activity_light(type, fid, fin);
-    actant_sources{1} = fin;
-    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+    % Ask about conversion epoch
+    if nargin == 2,
+        str = inputdlg('Epoch length (in seconds):', 'Epoch length', 1, {'60'});
+        if (length(str) == 1),
+            epoch = str2num(str{1});
+        else
+            epoch = 60;
+        end
+    end
+    ts = activity(fid, fin, epoch);
 elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
-    type = 2;
-    actant_datasets{1} = activity_light(type, fid, fin);
-    actant_sources{1} = fin;
-    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+    % Ask about conversion epoch
+    if nargin == 2,
+        str = inputdlg('Epoch length (in seconds):', 'Epoch length', 1, {'60'});
+        if (length(str) == 1),
+            epoch = str2num(str{1});
+        else
+            epoch = 60;
+        end
+    end
+    ts = light(fid, fin, epoch);
 elseif strcmp(typestr, sprintf('NAME,LAT,LON\n')),
-    type = 3;
-    actant_datasets{1} = location(type, fid, fin);
-    actant_sources{1} = fin;
-    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+    ts = location(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,TYPE,DIR,ID,LENGTH\n')),
-    type = 4;
-    [actant_datasets{1} actant_datasets{2}] = calls_texts(type, fid, fin);
-    actant_sources{1} = fin;
-    actant_sources{2} = fin;
-    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+    ts = calls_texts(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,HAPPY+,CONFIDENT+,SLEEP-,TALK+,ACTIVITY+,ALTMAN\r\n')),
-    type = 5;
-    actant_datasets = altman(type, fid, fin);
-    for i=1:length(actant_datasets),
-        actant_sources{i} = fin;
-    end
-    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+    ts = altman(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,ASLEEP,NIGHT_WAKE,EARLY_WAKE,SLEEP+,SAD+,APPETITE-,APPETITE+,WEIGHT-,WEIGHT+,CONCENTRATION,SELF-,SUICIDE,INTEREST-,ENERGY-,SLOW+,RESTLESS+,QIDS\r\n')),
-    type = 6;
-    actant_datasets = qids(type, fid, fin);
-    for i=1:length(actant_datasets),
-        actant_sources{i} = fin;
-    end
-    save(fout, 'actant_sources', 'actant_datasets', '-v7.3');
+    ts = qids(fid, fin);
 else
     errordlg(sprintf(['Unknown data\n' typestr unitstr]), 'Error', 'modal');
     return;
 end
 
 % Save file
+save(fout, '-struct', 'ts', '-v7.3');
 fclose(fid);
 status = true;
 
-function ts = activity_light(type, fid, fin)
+% Converts to localtime from yyyy-mm-dd HH:MM:SS.FFF+ZZZZ
+function t = localtime(s)
+        t = datenum(s, 'yyyy-mm-dd HH:MM:SS.FFF');
+        zh = cellfun(@(x) x(24:26), s, 'UniformOutput', false);
+        zm = cellfun(@(x) x(27:28), s, 'UniformOutput', false);
+        zh_num = str2double(zh)/(24);
+        zm_num = str2double(zm)/(24*60) .* sign(zh_num);
+        t = t + zh_num/(24) + zm_num/(24*60);
+
+function ts = activity(fid, fin, epoch)
     % Define waitbar increment (we are positioned just next to header)
     fi = dir(fin);
     fs = fi.bytes;
     tmp = fgets(fid);
     winc = length(tmp)/fs;
-    % Ask about conversion epoch
-    str = inputdlg('Epoch length (in seconds):', 'Epoch length', 1, {'60'});
-    if (length(str) == 1),
-        epoch = str2num(str{1});
-    else
-        epoch = 60;
-    end
     % Create timeseries
-    switch type,
-        case 1,
-            ts = timeseries('ACT');
-            ts.DataInfo.Unit = 'm/s^2';
-        case 2,
-            ts = timeseries('LIGHT');
-            ts.DataInfo.Unit = 'lux';
+    ts.act = timeseries('ACT');
+    ts.act.DataInfo.Unit = 'm/s^2';
+    ts.act.TimeInfo.Units = 'days';
+    ts.act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    % We may not have any data
+    if tmp == -1,
+        return;
     end
-    ts.TimeInfo.Units = 'days';
-    ts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     % Initialize conversion cycle
     block = 1000;
     wpos = 0;
     n = 1;
     tinc = 1*epoch/(24*60*60);
     hw = waitbar(0, 'Please wait while the data is converted...');
-    switch type,
-        case 1,
-            tmp = textscan(tmp, '%s%f%f%f', 'Delimiter', ',');
-            accum = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
-        case 2,
-            tmp = textscan(tmp, '%s%f', 'Delimiter', ',');
-            accum = tmp{2};
-    end
-    tpos = ceil(datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF')/tinc)*tinc;
+    tmp = textscan(tmp, '%s%f%f%f', 'Delimiter', ',');
+    accum = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
+    tpos = ceil(localtime(tmp{1})/tinc)*tinc;
     % Read/convert data in blocks
     while ~feof(fid),
-        switch type,
-            case 1,
-                tmp = textscan(fid, '%s%f%f%f', block, 'Delimiter', ',');
-                val = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
-            case 2,
-                tmp = textscan(fid, '%s%f', block, 'Delimiter', ',');
-                val = tmp{2};
-        end
-        time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
+        tmp = textscan(fid, '%s%f%f%f', block, 'Delimiter', ',');
+        val = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
+        time = localtime(tmp{1});
         % accumulate values for each period
         for i=1:length(time),
             if time(i) < tpos,
                 accum = accum + val(i);
                 n = n + 1;
             else
-                ts = addsample(ts, 'Data', accum/n, 'Time', tpos);
+                ts.act = addsample(ts.act, 'Data', accum/n, 'Time', tpos);
                 tpos = tpos + tinc;
                 accum = val(i);
                 n = 1;
@@ -170,28 +155,84 @@ function ts = activity_light(type, fid, fin)
     close (hw);
 
 
-function ts = location(type, fid, fin)
+function ts = light(fid, fin, epoch)
     % Define waitbar increment (we are positioned just next to header)
     fi = dir(fin);
     fs = fi.bytes;
     tmp = fgets(fid);
     winc = length(tmp)/fs;
     % Create timeseries
-    ts = timeseries('SPEED');
-    ts.DataInfo.Unit = 'km/h';
-    ts.TimeInfo.Units = 'days';
-    ts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.light = timeseries('LIGHT');
+    ts.light.DataInfo.Unit = 'lux';
+    ts.light.TimeInfo.Units = 'days';
+    ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    % We may not have any data
+    if tmp == -1,
+        return;
+    end
+    % Initialize conversion cycle
+    block = 1000;
+    wpos = 0;
+    n = 1;
+    tinc = 1*epoch/(24*60*60);
+    hw = waitbar(0, 'Please wait while the data is converted...');
+    tmp = textscan(tmp, '%s%f', 'Delimiter', ',');
+    accum = tmp{2};
+    tpos = ceil(localtime(tmp{1})/tinc)*tinc;
+    % Read/convert data in blocks
+    while ~feof(fid),
+        tmp = textscan(fid, '%s%f', block, 'Delimiter', ',');
+        val = tmp{2};
+        time = localtime(tmp{1});
+        % accumulate values for each period
+        for i=1:length(time),
+            if time(i) < tpos,
+                accum = accum + val(i);
+                n = n + 1;
+            else
+                ts.light = addsample(ts.light, 'Data', accum/n, 'Time', tpos);
+                tpos = tpos + tinc;
+                accum = val(i);
+                n = 1;
+            end
+        end
+        % update waitbar
+        wpos = wpos + winc*block;
+        if wpos > 1,
+            wpos = 1;
+        end
+        waitbar(wpos, hw);
+    end
+    waitbar(1, hw);
+    close (hw);
+
+
+function ts = location(fid, fin)
+    % Define waitbar increment (we are positioned just next to header)
+    fi = dir(fin);
+    fs = fi.bytes;
+    tmp = fgets(fid);
+    winc = length(tmp)/fs;
+    % Create timeseries
+    ts.speed = timeseries('SPEED');
+    ts.speed.DataInfo.Unit = 'km/h';
+    ts.speed.TimeInfo.Units = 'days';
+    ts.speed.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    % We may not have any data
+    if tmp == -1,
+        return;
+    end
     % Read/convert data
     hw = waitbar(0, 'Please wait while the data is converted...');
     wpos = 0;
-    block = 1000;
+    block = 100;
     tmp = textscan(tmp, '%s%f%f', 'Delimiter', ',');
-    time_prev = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
+    time_prev = localtime(tmp{1});
     lat_prev = tmp{2};
     lon_prev = tmp{3};
     while ~feof(fid),
         tmp = textscan(fid, '%s%f%f', block, 'Delimiter', ',');
-        time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
+        time = localtime(tmp{1});
         lat = tmp{2};
         lon = tmp{3};
         % calculate distance from previous point
@@ -207,7 +248,7 @@ function ts = location(type, fid, fin)
                 c = 2*atan2(sqrt(a), sqrt(1-a));
                 d = 6371*c; % in km
                 speed = d/(time(i)-time_prev);
-                ts = addsample(ts, 'Data', speed/24, 'Time', time(i));
+                ts.speed = addsample(ts.speed, 'Data', speed/24, 'Time', time(i));
             end
             time_prev = time(i);
             lat_prev = lat(i);
@@ -224,15 +265,15 @@ function ts = location(type, fid, fin)
     close (hw);
 
 
-function [calls texts] = calls_texts(type, fid, fin)
-    texts = timeseries('TEXTS');
-    texts.DataInfo.Unit = 'days';
-    texts.TimeInfo.Units = 'days';
-    texts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-    calls = timeseries('CALLS');
-    calls.DataInfo.Unit = 'days';
-    calls.TimeInfo.Units = 'days';
-    calls.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+function ts = calls_texts(fid, fin)
+    ts.texts = timeseries('TEXTS');
+    ts.texts.DataInfo.Unit = 'days';
+    ts.texts.TimeInfo.Units = 'days';
+    ts.texts.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.calls = timeseries('CALLS');
+    ts.calls.DataInfo.Unit = 'days';
+    ts.calls.TimeInfo.Units = 'days';
+    ts.calls.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     % Read/convert data
     hw = waitbar(0, 'Please wait while the data is converted...');
     block = 100;
@@ -240,7 +281,7 @@ function [calls texts] = calls_texts(type, fid, fin)
     len_prev = 0;
     while ~feof(fid),
         tmp = textscan(fid, '%s%s%s%s%f', block, 'Delimiter', ',');
-        time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
+        time = localtime(tmp{1});
         type = tmp{2};
         dir = tmp{3};
         num = tmp{4};
@@ -250,10 +291,10 @@ function [calls texts] = calls_texts(type, fid, fin)
             % cannot really calculate momentary speed
             if ~strcmp(num{i}, num_prev) && len(i) ~= len_prev,
                 if strcmp(type(i), 'Call'),
-                    texts = addsample(texts,...
+                    ts.texts = addsample(ts.texts,...
                         'Data', time(i) + len(i)/(24*60*60), 'Time', time(i));
                 elseif strcmp(type(i), 'Text'),
-                    calls = addsample(calls,...
+                    ts.calls = addsample(ts.calls,...
                         'Data', time(i) + len(i)/(24*60*60), 'Time', time(i));
                 end
             end
@@ -265,58 +306,60 @@ function [calls texts] = calls_texts(type, fid, fin)
     close (hw);
 
 
-function altman = altman(type, fid, fin)
-    altman{1} = timeseries('HAPPY+');
-    altman{2} = timeseries('CONFIDENT+');
-    altman{3} = timeseries('SLEEP-');
-    altman{4} = timeseries('TALK+');
-    altman{5} = timeseries('ACTIVITY+');
-    altman{6} = timeseries('ALTMAN');
-    for i=1:length(altman),
-        altman{i}.DataInfo.Unit = 'days';
-        altman{i}.TimeInfo.Units = 'days';
-        altman{i}.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+function ts = altman(fid, fin)
+    ts.happy_p = timeseries('HAPPY+');
+    ts.confident_p = timeseries('CONFIDENT+');
+    ts.sleep_m = timeseries('SLEEP-');
+    ts.talk_p = timeseries('TALK+');
+    ts.activity_p = timeseries('ACTIVITY+');
+    ts.altman = timeseries('ALTMAN');
+    fields = fieldnames(ts);
+    for i=1:numel(fields),
+        ts.(fields{i}).DataInfo.Unit = 'days';
+        ts.(fields{i}).TimeInfo.Units = 'days';
+        ts.(fields{i}).TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     end
     % Read/convert data
     hw = waitbar(0, 'Please wait while the data is converted...');
     tmp = textscan(fid, '%s%f%f%f%f%f%f', 'Delimiter', ',');
     time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS');
-    for i=1:length(altman),
-        altman{i} = addsample(altman{i}, 'Data', tmp{i+1}, 'Time', time);
+    for i=1:numel(fields),
+        ts.(fields{i}) = addsample(ts.(fields{i}), 'Data', tmp{i+1}, 'Time', time);
     end
     waitbar(1, hw);
     close (hw);
 
 
-function qids = qids(type, fid, fin)
-    qids{1} = timeseries('ASLEEP');
-    qids{2} = timeseries('NIGHT_WAKE');
-    qids{3} = timeseries('EARLY_WAKE');
-    qids{4} = timeseries('SLEEP+');
-    qids{5} = timeseries('SAD+');
-    qids{6} = timeseries('APPETITE-');
-    qids{7} = timeseries('APPETITE+');
-    qids{8} = timeseries('WEIGHT-');
-    qids{9} = timeseries('WEIGHT+');
-    qids{10} = timeseries('CONCENTRATION');
-    qids{11} = timeseries('SELF-');
-    qids{12} = timeseries('SUICIDE');
-    qids{13} = timeseries('INTEREST-');
-    qids{14} = timeseries('ENERGY-');
-    qids{15} = timeseries('SLOW+');
-    qids{16} = timeseries('RESTLESS+');
-    qids{17} = timeseries('QIDS');
-    for i=1:length(qids),
-        qids{i}.DataInfo.Unit = 'days';
-        qids{i}.TimeInfo.Units = 'days';
-        qids{i}.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+function ts = qids(fid, fin)
+    ts.asleep = timeseries('ASLEEP');
+    ts.night_wake = timeseries('NIGHT_WAKE');
+    ts.early_wake = timeseries('EARLY_WAKE');
+    ts.sleep_m = timeseries('SLEEP+');
+    ts.sad_p = timeseries('SAD+');
+    ts.appetite_m = timeseries('APPETITE-');
+    ts.appetite_p = timeseries('APPETITE+');
+    ts.weight_m = timeseries('WEIGHT-');
+    ts.weight_p = timeseries('WEIGHT+');
+    ts.concentration = timeseries('CONCENTRATION');
+    ts.self_m = timeseries('SELF-');
+    ts.suicide = timeseries('SUICIDE');
+    ts.interest_m = timeseries('INTEREST-');
+    ts.energy_m = timeseries('ENERGY-');
+    ts.slow_p = timeseries('SLOW+');
+    ts.restless_p = timeseries('RESTLESS+');
+    ts.qids = timeseries('QIDS');
+    fields = fieldnames(ts);
+    for i=1:numel(fields),
+        ts.(fields{i}).DataInfo.Unit = 'days';
+        ts.(fields{i}).TimeInfo.Units = 'days';
+        ts.(fields{i}).TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     end
     % Read/convert data
     hw = waitbar(0, 'Please wait while the data is converted...');
     tmp = textscan(fid, '%s%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f', 'Delimiter', ',');
     time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS');
-    for i=1:length(qids),
-        qids{i} = addsample(qids{i}, 'Data', tmp{i+1}, 'Time', time);
+    for i=1:numel(fields),
+        ts.(fields{i}) = addsample(ts.(fields{i}), 'Data', tmp{i+1}, 'Time', time);
     end
     waitbar(1, hw);
     close (hw);

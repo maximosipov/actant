@@ -9,7 +9,7 @@ function ts = load_actiwatch(file)
 %   file - Actiwatch AWD file name
 %
 % Results:
-%   ts - Cell array of timeseries objects
+%   ts - Structure of timeseries
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -41,7 +41,8 @@ function ts = load_actiwatch(file)
 
 fid = fopen(file, 'r');
 if (fid == -1)
-    error('Could not open file %s', file);
+    errordlg(['Could not open file ' file], 'Error', 'modal');
+    return;
 end
 
 % read file header, ignore ID
@@ -57,7 +58,8 @@ else
     if (sampling == 8)
         sampling = 120;
     else
-        error('Unknown sampling rate %i in %s', sampling, file);
+        errordlg('Unknown sampling rate', 'Error', 'modal');
+        return;
     end
 end
 % convert to datenum
@@ -70,14 +72,11 @@ len = length(data);
 time = linspace(start + sampling, start + sampling*len, len);
 
 % create timeseries
-out.act = timeseries(data(:, 1), time, 'Name', 'ACT');
-out.act.DataInfo.Unit = 'counts';
-out.act.TimeInfo.Units = 'days';
-out.act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-out.light = timeseries(data(:, 2), time, 'Name', 'LIGHT');
-out.light.DataInfo.Unit = 'lux';
-out.light.TimeInfo.Units = 'days';
-out.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-
-ts{1} = out.act;
-ts{2} = out.light;
+ts.act = timeseries(data(:, 1), time, 'Name', 'ACT');
+ts.act.DataInfo.Unit = 'counts';
+ts.act.TimeInfo.Units = 'days';
+ts.act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+ts.light = timeseries(data(:, 2), time, 'Name', 'LIGHT');
+ts.light.DataInfo.Unit = 'lux';
+ts.light.TimeInfo.Units = 'days';
+ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
