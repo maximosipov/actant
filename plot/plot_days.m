@@ -93,7 +93,7 @@ for i = 1:plots,
     end
     if ~exist('tsr', 'var') || isempty(tsr),
         % Plot single axes
-        H1 = area(ah, tsld_t, tsld_d);
+        H1 = stem(ah, tsld_t, tsld_d, 'filled', 'k', 'MarkerSize', 1);
         AX = gca;
         xlim(AX, [t1 t2]);
         ylim(AX, lylim);
@@ -101,13 +101,10 @@ for i = 1:plots,
         if (i < plots),
             set(AX, 'XTickLabel', '');
         end
-%        set(get(AX,'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
         set(AX, 'YTickLabel', '');
         set(AX,'YColor','k');
-        set(H1,'EdgeColor','k');
-        set(H1,'FaceColor','k');
         h = text((t1+t2)/2, (lylim(1)+lylim(2))/2,...
-            [datestr(t1) ' - ' datestr(t2-1)],...
+            [datestr(t1, 'dd-mmm-yyyy (ddd)') ' - ' datestr(t2-1, 'dd-mmm-yyyy (ddd)')],...
             'Color', [0.5 0.5 0.5],...
             'VerticalAlignment', 'middle',...
             'HorizontalAlignment', 'center');
@@ -124,7 +121,7 @@ for i = 1:plots,
         end
         [AX,H1,H2] = plotyy(ah, tsld_t, tsld_d,...
                             tsrd_t, tsrd_d,...
-                            'area', 'plot');
+                            'stem', 'stem');
         xlim(AX(1), [t1 t2]);
         xlim(AX(2), [t1 t2]);
         ylim(AX(1), lylim);
@@ -137,18 +134,17 @@ for i = 1:plots,
             set(AX(1), 'XTickLabel', '');
             set(AX(2), 'XTickLabel', '');
         end
-%        set(get(AX(1),'Ylabel'),'String', [tsl.Name ' (' tsl.DataInfo.Units ')']);
-%        set(get(AX(2),'Ylabel'),'String', [tsr.Name ' (' tsr.DataInfo.Units ')']);
         set(AX(1), 'YTickLabel', '');
         set(AX(2), 'YTickLabel', '');
         set(AX(1),'YColor','k');
         set(AX(2),'YColor','r');
         set(AX(2),'YDir','reverse');
-        set(H1,'EdgeColor','k');
-        set(H1,'FaceColor','k');
+        set(H1,'Color','k');
+        set(H1,'MarkerSize', 1);
         set(H2,'Color','r');
+        set(H2,'MarkerSize', 1);
         h = text((t1+t2)/2, (lylim(1)+lylim(2))/2,...
-            [datestr(t1) ' - ' datestr(t2-1)],...
+            [datestr(t1, 'dd-mmm-yyyy (ddd)') ' - ' datestr(t2-1, 'dd-mmm-yyyy (ddd)')],...
             'Color', [0.5 0.5 0.5],...
             'VerticalAlignment', 'middle',...
             'HorizontalAlignment', 'center');
