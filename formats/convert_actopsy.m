@@ -55,27 +55,9 @@ end
 typestr = fgets(fid);
 unitstr = fgets(fid);
 if strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n')),
-    % Ask about conversion epoch
-    if nargin == 2,
-        str = inputdlg('Epoch length (in seconds):', 'Epoch length', 1, {'60'});
-        if (length(str) == 1),
-            epoch = str2num(str{1});
-        else
-            epoch = 60;
-        end
-    end
-    ts = activity(fid, fin, epoch);
+    ts = activity(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
-    % Ask about conversion epoch
-    if nargin == 2,
-        str = inputdlg('Epoch length (in seconds):', 'Epoch length', 1, {'60'});
-        if (length(str) == 1),
-            epoch = str2num(str{1});
-        else
-            epoch = 60;
-        end
-    end
-    ts = light(fid, fin, epoch);
+    ts = light(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,LAT,LON\n')),
     ts = location(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,TYPE,DIR,ID,LENGTH\n')),
@@ -103,7 +85,7 @@ function t = localtime(s)
         zm_num = str2double(zm)/(24*60) .* sign(zh_num);
         t = t + zh_num/(24) + zm_num/(24*60);
 
-function ts = activity(fid, fin, epoch)
+function ts = activity(fid, fin)
     % Define waitbar increment (we are positioned just next to header)
     fi = dir(fin);
     fs = fi.bytes;
@@ -126,23 +108,21 @@ function ts = activity(fid, fin, epoch)
     ts.acc.DataInfo.Unit = 'm/s^2';
     ts.acc.TimeInfo.Units = 'days';
     ts.acc.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-    ts.acc_avg = timeseries('ACC_AVG');
-    ts.acc_avg.DataInfo.Unit = 'm/s^2';
-    ts.acc_avg.TimeInfo.Units = 'days';
-    ts.acc_avg.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     % We may not have any data
     if tmp == -1,
         return;
     end
-    % Initialize conversion cycle
-    block = 1000;
-    wpos = 0;
-    n = 1;
-    tinc = 1*epoch/(24*60*60);
-    hw = waitbar(0, 'Please wait while the data is converted...');
     tmp = textscan(tmp, '%s%f%f%f', 'Delimiter', ',');
-    accum = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
-    tpos = ceil(localtime(tmp{1})/tinc)*tinc;
+    val = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
+    time = localtime(tmp{1});
+    ts.acc_x = addsample(ts.acc_x, 'Data', tmp{2}, 'Time', time);
+    ts.acc_y = addsample(ts.acc_y, 'Data', tmp{3}, 'Time', time);
+    ts.acc_z = addsample(ts.acc_z, 'Data', tmp{4}, 'Time', time);
+    ts.acc = addsample(ts.acc, 'Data', val, 'Time', time);
+    % Initialize conversion cycle
+    block = 10000;
+    wpos = 0;
+    hw = waitbar(0, 'Please wait while the data is converted...');
     % Read/convert data in blocks
     while ~feof(fid),
         tmp = textscan(fid, '%s%f%f%f', block, 'Delimiter', ',');
@@ -153,18 +133,7 @@ function ts = activity(fid, fin, epoch)
         ts.acc_y = addsample(ts.acc_y, 'Data', tmp{3}, 'Time', time);
         ts.acc_z = addsample(ts.acc_z, 'Data', tmp{4}, 'Time', time);
         ts.acc = addsample(ts.acc, 'Data', val, 'Time', time);
-        % accumulate values for each period
-        for i=1:length(time),
-            if time(i) < tpos,
-                accum = accum + val(i);
-                n = n + 1;
-            else
-                ts.acc_avg = addsample(ts.acc_avg, 'Data', accum/n, 'Time', tpos);
-                tpos = tpos + tinc;
-                accum = val(i);
-                n = 1;
-            end
-        end
+        fprintf(1, '.');
         % update waitbar
         wpos = wpos + winc*block;
         if wpos > 1,
@@ -187,41 +156,25 @@ function ts = light(fid, fin, epoch)
     ts.light.DataInfo.Unit = 'lux';
     ts.light.TimeInfo.Units = 'days';
     ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-    ts.light_avg = timeseries('LIGHT_AVG');
-    ts.light_avg.DataInfo.Unit = 'lux';
-    ts.light_avg.TimeInfo.Units = 'days';
-    ts.light_avg.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     % We may not have any data
     if tmp == -1,
         return;
     end
-    % Initialize conversion cycle
-    block = 1000;
-    wpos = 0;
-    n = 1;
-    tinc = 1*epoch/(24*60*60);
-    hw = waitbar(0, 'Please wait while the data is converted...');
     tmp = textscan(tmp, '%s%f', 'Delimiter', ',');
-    accum = tmp{2};
-    tpos = ceil(localtime(tmp{1})/tinc)*tinc;
+    val = tmp{2};
+    time = localtime(tmp{1});
+    ts.light = addsample(ts.light, 'Data', val, 'Time', time);
+    % Initialize conversion cycle
+    block = 10000;
+    wpos = 0;
+    hw = waitbar(0, 'Please wait while the data is converted...');
     % Read/convert data in blocks
     while ~feof(fid),
         tmp = textscan(fid, '%s%f', block, 'Delimiter', ',');
         val = tmp{2};
         time = localtime(tmp{1});
         ts.light = addsample(ts.light, 'Data', val, 'Time', time);
-        % accumulate values for each period
-        for i=1:length(time),
-            if time(i) < tpos,
-                accum = accum + val(i);
-                n = n + 1;
-            else
-                ts.light_avg = addsample(ts.light_avg, 'Data', accum/n, 'Time', tpos);
-                tpos = tpos + tinc;
-                accum = val(i);
-                n = 1;
-            end
-        end
+        fprintf(1, '.');
         % update waitbar
         wpos = wpos + winc*block;
         if wpos > 1,
