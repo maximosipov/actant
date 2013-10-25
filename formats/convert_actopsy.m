@@ -110,10 +110,26 @@ function ts = activity(fid, fin, epoch)
     tmp = fgets(fid);
     winc = length(tmp)/fs;
     % Create timeseries
-    ts.act = timeseries('ACT');
-    ts.act.DataInfo.Unit = 'm/s^2';
-    ts.act.TimeInfo.Units = 'days';
-    ts.act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc_x = timeseries('ACC_X');
+    ts.acc_x.DataInfo.Unit = 'm/s^2';
+    ts.acc_x.TimeInfo.Units = 'days';
+    ts.acc_x.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc_y = timeseries('ACC_Y');
+    ts.acc_y.DataInfo.Unit = 'm/s^2';
+    ts.acc_y.TimeInfo.Units = 'days';
+    ts.acc_y.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc_z = timeseries('ACC_Z');
+    ts.acc_z.DataInfo.Unit = 'm/s^2';
+    ts.acc_z.TimeInfo.Units = 'days';
+    ts.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc = timeseries('ACC');
+    ts.acc.DataInfo.Unit = 'm/s^2';
+    ts.acc.TimeInfo.Units = 'days';
+    ts.acc.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc_avg = timeseries('ACC_AVG');
+    ts.acc_avg.DataInfo.Unit = 'm/s^2';
+    ts.acc_avg.TimeInfo.Units = 'days';
+    ts.acc_avg.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     % We may not have any data
     if tmp == -1,
         return;
@@ -132,13 +148,18 @@ function ts = activity(fid, fin, epoch)
         tmp = textscan(fid, '%s%f%f%f', block, 'Delimiter', ',');
         val = abs(sqrt(tmp{2}.^2 + tmp{3}.^2 + tmp{4}.^2) - 9.81);
         time = localtime(tmp{1});
+        % add raw samples
+        ts.acc_x = addsample(ts.acc_x, 'Data', tmp{2}, 'Time', time);
+        ts.acc_y = addsample(ts.acc_y, 'Data', tmp{3}, 'Time', time);
+        ts.acc_z = addsample(ts.acc_z, 'Data', tmp{4}, 'Time', time);
+        ts.acc = addsample(ts.acc, 'Data', val, 'Time', time);
         % accumulate values for each period
         for i=1:length(time),
             if time(i) < tpos,
                 accum = accum + val(i);
                 n = n + 1;
             else
-                ts.act = addsample(ts.act, 'Data', accum/n, 'Time', tpos);
+                ts.acc_avg = addsample(ts.acc_avg, 'Data', accum/n, 'Time', tpos);
                 tpos = tpos + tinc;
                 accum = val(i);
                 n = 1;
@@ -166,6 +187,10 @@ function ts = light(fid, fin, epoch)
     ts.light.DataInfo.Unit = 'lux';
     ts.light.TimeInfo.Units = 'days';
     ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.light_avg = timeseries('LIGHT_AVG');
+    ts.light_avg.DataInfo.Unit = 'lux';
+    ts.light_avg.TimeInfo.Units = 'days';
+    ts.light_avg.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     % We may not have any data
     if tmp == -1,
         return;
@@ -184,13 +209,14 @@ function ts = light(fid, fin, epoch)
         tmp = textscan(fid, '%s%f', block, 'Delimiter', ',');
         val = tmp{2};
         time = localtime(tmp{1});
+        ts.light = addsample(ts.light, 'Data', val, 'Time', time);
         % accumulate values for each period
         for i=1:length(time),
             if time(i) < tpos,
                 accum = accum + val(i);
                 n = n + 1;
             else
-                ts.light = addsample(ts.light, 'Data', accum/n, 'Time', tpos);
+                ts.light_avg = addsample(ts.light_avg, 'Data', accum/n, 'Time', tpos);
                 tpos = tpos + tinc;
                 accum = val(i);
                 n = 1;
@@ -214,6 +240,14 @@ function ts = location(fid, fin)
     tmp = fgets(fid);
     winc = length(tmp)/fs;
     % Create timeseries
+    ts.lat = timeseries('LAT');
+    ts.lat.DataInfo.Unit = 'deg';
+    ts.lat.TimeInfo.Units = 'days';
+    ts.lat.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.lon = timeseries('LON');
+    ts.lon.DataInfo.Unit = 'deg';
+    ts.lon.TimeInfo.Units = 'days';
+    ts.lon.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
     ts.speed = timeseries('SPEED');
     ts.speed.DataInfo.Unit = 'km/h';
     ts.speed.TimeInfo.Units = 'days';
@@ -230,11 +264,15 @@ function ts = location(fid, fin)
     time_prev = localtime(tmp{1});
     lat_prev = tmp{2};
     lon_prev = tmp{3};
+    ts.lat = addsample(ts.lat, 'Data', lat_prev, 'Time', time_prev);
+    ts.lon = addsample(ts.lon, 'Data', lon_prev, 'Time', time_prev);
     while ~feof(fid),
         tmp = textscan(fid, '%s%f%f', block, 'Delimiter', ',');
         time = localtime(tmp{1});
         lat = tmp{2};
         lon = tmp{3};
+        ts.lat = addsample(ts.lat, 'Data', lat, 'Time', time);
+        ts.lon = addsample(ts.lon, 'Data', lon, 'Time', time);
         % calculate distance from previous point
         for i=1:length(time),
             % cannot really calculate momentary speed
