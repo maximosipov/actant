@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 15-Oct-2013 12:56:47
+% Last Modified by GUIDE v2.5 12-Feb-2014 09:39:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -89,7 +89,7 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
 
     addpath('./formats');
     addpath('./sleep');
-    addpath('./wake');
+    %addpath('./wake');
     addpath('./rhythm');
     addpath('./other');
     addpath('./plot');
@@ -136,6 +136,7 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
     actant_analysis = struct(...
         'method', '_', ...
         'args', [], ...
+        'diary', [],...
         'results', [] ...
 	);
 
@@ -148,6 +149,7 @@ function actant_open_dataset(fname, fi, handles)
     global g_type_idx;
     global actant_datasets;
     global actant_sources;
+    
     % Load dataset
     if fi == g_type_idx.actiwatch_awd,
         h = waitbar(0, 'Please wait while the data is loaded...');
@@ -173,10 +175,11 @@ function actant_open_dataset(fname, fi, handles)
         errordlg('Format is not supported!', 'Error', 'modal');
         return;
     end
+    
     % Update internal data
     n = length(actant_datasets);
     field_names = fieldnames(data);
-    for i = 1:numel(field_names),
+    for i = 1:numel(field_names)
         tmp = getfield(data, char(field_names(i)));
         if strcmpi(class(tmp), 'timeseries')
             n = n + 1;
@@ -184,19 +187,21 @@ function actant_open_dataset(fname, fi, handles)
             actant_sources{n} = fname;
         end
     end
-
   
+
 % --------------------------------------------------------------------
 % Perform analysis
 function actant_analyze(method, dataset, args, handles)
     global actant_sources;
     global actant_datasets;
     global actant_analysis;
+    
     % Perform analysis
     h = waitbar(0, 'Please wait while analysis completes...');
     [data, actant_analysis.results] = method(dataset, args);
     waitbar(1, h);
     close(h);
+    
     % Update internal state
     if ~isempty(data),
         n = length(actant_datasets);
@@ -227,6 +232,9 @@ function actant_update_datasets(handles)
     end
     set(handles.uitable_data, 'Data', datasets);
     set(handles.popupmenu_dataset, 'String', nums);
+    
+    setappdata(0, 'data', actant_datasets);
+    setappdata(0, 'sources', actant_sources);
 
 
 % --------------------------------------------------------------------
@@ -380,11 +388,13 @@ function menu_file_open_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global g_file_types;
+    
     % Get file name
     [fn, fp, fi] = uigetfile(g_file_types, 'Select the data file');
     if fp == 0,
         return;
     end
+    
     % Get and check data file
     fname = [fp fn];
     fhandle = fopen(fname, 'r');
@@ -393,8 +403,10 @@ function menu_file_open_Callback(hObject, eventdata, handles)
         return;
     end
     fclose(fhandle);
+    
     % Load data
     actant_open_dataset(fname, fi, handles);
+    
     % Update datasets
     actant_update_datasets(handles);
 
@@ -421,7 +433,7 @@ function menu_file_print_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     printdlg;
 
-
+    
 % --------------------------------------------------------------------
 function menu_sleep_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_sleep (see GCBO)
@@ -430,30 +442,42 @@ function menu_sleep_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function menu_sleep_scoring_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_sleep_scoring (see GCBO)
+function menu_sleep_analysis_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_analysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global actant_analysis;
-    actant_analysis.method = 'actant_sleepscoring';
-    [~, actant_analysis.args] = actant_sleepscoring();
+    
+    actant_analysis = getappdata(0, 'analysis');
+    % set analysis label
+    actant_analysis.method = 'actant_oakley';
+    
+    % specify values
+    vals = {};
+    vals{1,1} = 'Algorithm';   vals{1, 2} = 'oakley';
+    vals{2,1} = 'Method';      vals{2, 2} = 'i';
+    vals{3,1} = 'Sensitivity'; vals{3, 2} = 'm';
+    vals{4,1} = 'Snooze';      vals{4, 2} = 'on';
+    vals{5,1} = 'Time window'; vals{5, 2} = 10; 
+    actant_analysis.args = vals;
+    
+    % update the main GUI and store variabeles
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
-
-
-% --------------------------------------------------------------------
-function menu_sleep_consensus_diary_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_sleep_consensus_diary (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
+    
+    % setappdata
+    setappdata(0, 'args', actant_analysis.args); 
+    setappdata(0, 'method', actant_analysis.method);
+    
+    % open the sleep consensus diary UI
+    sleep_consensus_diary()
+    
 % --------------------------------------------------------------------
 function menu_wake_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_wake (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
+ 
+    
 % --------------------------------------------------------------------
 function menu_wake_bins_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_wake_bins (see GCBO)
@@ -466,7 +490,6 @@ function menu_rhythm_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_rhythm (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --------------------------------------------------------------------
 function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
@@ -533,21 +556,66 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     global actant_datasets;
     global actant_analysis;
+    global actant_sources;
+    
+    % sleep data requires a 2nd GUI for the Sleep Consensus Diary.
+    % To avoid overwriting the guidata of the main GUI, data should be
+    % passed to appdata (instead of guidata, globals etc.) and loaded. 
+    actant_datasets = getappdata(0, 'data');
+    actant_analysis.args = getappdata(0, 'args');
+    actant_analysis.method = getappdata(0, 'method');
+    actant_analysis.diary = getappdata(0, 'diary');
+    actant_sources = getappdata(0, 'actant_sources');
+
+    
     % Get and check arguments
-    args = get(handles.uitable_analysis, 'Data');
+    n = get(handles.popupmenu_dataset, 'Value');
+    
+    try 
+        dataset = actant_datasets{n};
+    catch ME
+        % Give more information for mismatch.
+        if (strcmp(ME.identifier,'MATLAB:badsubscript'))
+            errordlg('Please select dataset!', 'Error', 'modal');
+            return
+        end
+    end
+    
     if strcmp(actant_analysis.method, '_'),
         errordlg('Please select analysis method!', 'Error', 'modal');
         return;
     end
-    n = get(handles.popupmenu_dataset, 'Value');
-    dataset = actant_datasets{n};
-    method = str2func(actant_analysis.method);
+    
     % Perform analysis
-    actant_analyze(method, dataset, args, handles);
-    % Update datasets
+    if strcmpi(actant_analysis.method, 'actant_oakley')
+        % get additional args from Sleep Consensus Diary
+        %args2 = get(handles.uitable_results, 'Data');
+        %args2 = actant_analysis.diary
+        [ts actant_analysis.results] = actant_oakley(dataset, actant_analysis.args, actant_analysis.diary);
+
+        % Update internal state
+        if ~isempty(ts),
+            n = length(actant_datasets);
+            for i = 1:length(ts),
+                actant_datasets{n+i} = ts(i);
+                actant_sources{n+i} = 'actant_oakley';
+            end
+        end
+    else
+        method = str2func(actant_analysis.method);    
+        actant_analyze(method, dataset, args, handles);
+    end
+    
+    % Update datasets table
     actant_update_datasets(handles);
-    % Update resutls
+    
+    % Update results table
     set(handles.uitable_results, 'Data', actant_analysis.results);
+    
+    % setappdata
+    setappdata(0, 'data', actant_datasets);
+    setappdata(0, 'sources', actant_sources);
+    setappdata(0, 'analysis', actant_analysis);
 
 
 % --- Executes on button press in pushbutton_s.

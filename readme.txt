@@ -15,21 +15,34 @@ and environmental timeseries, acquired using Actiwatch-L and GENEActiv
 accelerometers as well as Actopsy mobile application. Currently implemented
 analysis methods include:
 
- - Non-parametric activity analysis: Van Someren, Eus JW, et al. "Bright
-   light therapy: improved sensitivity to its effects on rest-activity
-   rhythms in Alzheimer patients by application of nonparametric methods."
-   Chronobiology international 16.4 (1999): 505-518.
+ - Non-parametric activity analysis: 
+   Van Someren EJW, et al. "Bright light therapy: improved sensitivity 
+   to its effects on rest-activity rhythms in Alzheimer patients by 
+   application of nonparametric methods." Chronobiology international 1999;
+   16(4):505-518.
 
- - Sleep analysis: Reference here
+ - Sleep analysis: 
+   Oakley NR. "Validation with polysomnography of the Sleepwatch 
+   sleep/wake scoring algorithm used by the Actiwatch activity 
+   monitor system: Technical Report to Mini-Mitter Co., Inc., 1997.
+    
+   Kushida CA, Chang A, Gadkary C, Guilleminault C, Carrillo O, Dement
+   WC. "Comparison of actigraphic, polysomnographic, and subjective assessment
+   of sleep parameters in sleep-disordered patients." Sleep Medicine
+   2001; 2:389-96.
 
- - Sample Entropy: Richman, Joshua S., and J. Randall Moorman.
-   "Physiological time-series analysis using approximate entropy and sample
-   entropy." American Journal of Physiology-Heart and Circulatory
-   Physiology 278.6 (2000): H2039-H2049.
+   te Lindert BHW, Van Someren EJW. "Sleep estimates using microelectro-
+   mechanical systems (MEMS)." SLEEP 2013;36(5):781-789
 
- - Multiscale Entropy: Costa, Madalena, Ary L. Goldberger, and C-K. Peng.
+ - Sample Entropy:
+   Richman, Joshua S, Randall Moorman J. "Physiological time-series analysis 
+   using approximate entropy and sample entropy." American Journal of 
+   Physiology-Heart and Circulatory Physiology 2000; 278(6):H2039-H2049.
+
+ - Multiscale Entropy: 
+   Costa, Madalena, Goldberger AL, Peng CK.
    "Multiscale entropy analysis of complex physiologic time series."
-   Physical review letters 89.6 (2002): 068102.
+   Physical review letters 2002; 89(6):068102.
 
 The toolbox provides flexible interface for integration of both new data
 formats and analysis methods. 
