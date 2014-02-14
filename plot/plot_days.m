@@ -94,6 +94,7 @@ for i = 1:plots,
     if ~exist('tsr', 'var') || isempty(tsr),
         % Plot single axes
         H1 = stem(ah, tsld_t, tsld_d, 'filled', 'k', 'MarkerSize', 1);
+        hold on;
         AX = gca;
         xlim(AX, [t1 t2]);
         ylim(AX, lylim);
@@ -103,6 +104,16 @@ for i = 1:plots,
         end
         set(AX, 'YTickLabel', '');
         set(AX,'YColor','k');
+        
+        % if eventdata is part of the timeseries, plot it
+        try
+            events = tsl.Events;
+            plot_event_data(events, t2)       
+        catch
+            % no plots
+        end
+        hold off
+        
         h = text((t1+t2)/2, (lylim(1)+lylim(2))/2,...
             [datestr(t1, 'dd-mmm-yyyy (ddd)') ' - ' datestr(t2-1, 'dd-mmm-yyyy (ddd)')],...
             'Color', [0.5 0.5 0.5],...
@@ -143,6 +154,23 @@ for i = 1:plots,
         set(H1,'MarkerSize', 1);
         set(H2,'Color','r');
         set(H2,'MarkerSize', 1);
+        
+        % if eventdata is part of the timeseries, plot it
+        try
+            events = tsl.Events;
+            plot_event_data(events, t2)       
+        catch
+            % no plots
+        end
+        
+        try
+            events = tsr.Events;
+            plot_event_data(events, t2)       
+        catch
+            % no plots
+        end
+        hold off
+        
         h = text((t1+t2)/2, (lylim(1)+lylim(2))/2,...
             [datestr(t1, 'dd-mmm-yyyy (ddd)') ' - ' datestr(t2-1, 'dd-mmm-yyyy (ddd)')],...
             'Color', [0.5 0.5 0.5],...
@@ -172,4 +200,32 @@ end
 
 waitbar(1, hw);
 close(hw);
+end
 
+% %%% add plotoption for eventdata
+function plot_event_data(events, t2)
+    for j = 1:numel(events)
+
+    % get name and time of event
+    label = events(1,j).Name;
+    time = datenum(events(1,j).StartDate);
+
+        % plot according to name and time
+        if strcmp(label, 'In bed time')
+            plot([time time], [0 t2],  'b');
+        elseif strcmp(label, 'Lights off time')
+            plot([time time], [0 t2],  'r');
+        elseif strcmp(label, 'Sleep onset time')
+            plot([time time], [0 t2],  'm');
+        elseif strcmp(label, 'Final wake time')
+            plot([time time], [0 t2],  'm');
+        elseif strcmp(label, 'Wake time')
+            plot([time time], [0 t2],  'r');
+        elseif strcmp(label, 'Out of bed time')
+            plot([time time], [0 t2],  'b');
+        elseif strcmp(label, 'wake')
+            plot([time time], [t2-100 t2-100],  '+');
+        end
+    end
+end
+                            
