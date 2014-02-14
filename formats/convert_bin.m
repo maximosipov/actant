@@ -20,6 +20,8 @@ function status = convert_bin(fin, fout)
     [header, time, xyz, light, button, prop_val] = read_bin(fin);
     
     % convert variables to time series objects
+    %%% NOTE time must be a cell array of date strings! mm-dd-yy
+    %%% HH:MM:SS:FFF
     acc_x = timeseries(xyz(:,1), time, 'Name', 'ACCX');
     acc_x.DataInfo.Unit = 'g';
     acc_y = timeseries(xyz(:,2), time, 'Name', 'ACCY');
