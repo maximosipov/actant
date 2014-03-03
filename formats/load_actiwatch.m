@@ -52,31 +52,46 @@ hour = fgetl(fid);
 % create datenum
 start = datenum([day ' ' hour], 'dd-mmm-yyyy HH:MM');
 sampling = fscanf(fid, '%u', 1);
-if (sampling == 4)
+if (sampling == 1)
+    sampling = 15;
+elseif (sampling == 2)
+    sampling = 30;   
+elseif (sampling == 4)
     sampling = 60;
+elseif (sampling == 8)
+    sampling = 120;
 else
-    if (sampling == 8)
-        sampling = 120;
-    else
-        errordlg('Unknown sampling rate', 'Error', 'modal');
-        return;
-    end
+    errordlg('Unknown sampling rate', 'Error', 'modal');
+    return;
 end
 % convert to datenum
 sampling = sampling/(24*60*60);
 fclose(fid);
 
 % read activity data
-data = csvread(file, 7, 0);
+% awd files sometimes contain 'M' strings in a second column, causing
+% csvread to fail. Use textscan instead, and keep 1st column only.
+%data = csvread(file, 7, 0);
+fid = fopen(file);
+    tmp = textscan(fid, '%f%s', 'headerlines', 7, 'delimiter', ',');
+    data = tmp{:,1};
+fclose(fid);
+
 len = length(data);
-time = linspace(start + sampling, start + sampling*len, len);
+time = linspace(start, start + sampling*(len - 1), len);
 
 % create timeseries
 ts.act = timeseries(data(:, 1), time, 'Name', 'ACT');
 ts.act.DataInfo.Unit = 'counts';
-ts.act.TimeInfo.Units = 'days';
+ts.act.TimeInfo.Units = 'seconds';
+%ts.act.TimeInfo.Increment = sampling;
 ts.act.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
-ts.light = timeseries(data(:, 2), time, 'Name', 'LIGHT');
-ts.light.DataInfo.Unit = 'lux';
-ts.light.TimeInfo.Units = 'days';
-ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+if size(data,2) == 2    
+    ts.light = timeseries(data(:, 2), time, 'Name', 'LIGHT');
+    ts.light.DataInfo.Unit = 'lux';
+    ts.light.TimeInfo.Units = 'seconds';
+    %ts.act.TimeInfo.Increment = sampling;
+    ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+end
+
