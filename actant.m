@@ -220,6 +220,7 @@ function actant_update_datasets(handles)
     datasets = get(handles.uitable_data, 'Data');
     nums = {};
     for i = 1:length(actant_datasets),
+        % If added new dataset, set Show field to No
         if i > size(datasets, 1),
             datasets{i, 1} = 'No';
         end
@@ -500,6 +501,9 @@ function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
     actant_analysis.method = 'actant_activity';
     [~, actant_analysis.args] = actant_activity();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
+    % make sure it is shared between windows
+    setappdata(0, 'args', actant_analysis.args);
+    setappdata(0, 'method', actant_analysis.method);
 
 
 % --------------------------------------------------------------------
@@ -518,6 +522,9 @@ function menu_entropy_sampen_Callback(hObject, eventdata, handles)
     actant_analysis.method = 'actant_sampen';
     [~, actant_analysis.args] = actant_sampen();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
+    % make sure it is shared between windows
+    setappdata(0, 'args', actant_analysis.args);
+    setappdata(0, 'method', actant_analysis.method);
 
 
 % --------------------------------------------------------------------
@@ -529,6 +536,9 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
     actant_analysis.method = 'actant_mse';
     [~, actant_analysis.args] = actant_mse();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
+    % make sure it is shared between windows
+    setappdata(0, 'args', actant_analysis.args);
+    setappdata(0, 'method', actant_analysis.method);
 
 
 % --------------------------------------------------------------------
@@ -603,6 +613,7 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
         end
     else
         method = str2func(actant_analysis.method);    
+        args = actant_analysis.args;
         actant_analyze(method, dataset, args, handles);
     end
     

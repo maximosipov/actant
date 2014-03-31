@@ -64,7 +64,11 @@ data24 = zeros(24*60, t_end-t_start);
 for i=t_start:t_end-1,
     idx = find((ts_rs.Time >= i) & (ts_rs.Time < i+1));
     ts_24 = getsamples(ts_rs, idx);
-    data24(:,i-t_start+1) = ts_24.Data;
+    if length(ts_24) ~= size(data24, 1)
+        fprintf(1, 'activity: missing data or not constant sampling rate\n');
+    else
+        data24(:,i-t_start+1) = ts_24.Data;
+    end
 end
 
 % IS
