@@ -59,8 +59,9 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Check for uitable data
-global actant_analysis
-data = getappdata(0, 'diary');
+global actant_analysis;
+actant_analysis = getappdata(0, 'actant_analysis');
+data = actant_analysis.diary;
 
 if isempty(data)
     data = {'dd-mm-yy', 2300, 2315, 10, 4, 25, 0700, 0715};
@@ -184,8 +185,9 @@ function pushbutton_save_Callback(hObject, eventdata, handles)
     labels = {'Date', 'Bed time', 'Lights off', 'Latency', 'Wake times',...
               'Wake duration', 'Wake time', 'Out of bed'};
     set(handle, 'Data', [labels; data]');
-    
-    setappdata(0, 'diary', data);
+
+    actant_analysis.diary = data;
+    setappdata(0, 'actant_analysis', actant_analysis);
 
     % close figure
     close(sleep_consensus_diary)
@@ -196,6 +198,7 @@ function pushbutton_reset_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_reset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    global actant_analysis
             
 % questdlg
 choice = questdlg('Are you sure you want to reset the sleep diary?', ...
@@ -206,7 +209,8 @@ choice = questdlg('Are you sure you want to reset the sleep diary?', ...
 switch choice
     case 'Yes'
         % clear appdata
-        setappdata(0, 'diary', []);
+        actant_analysis.diary = [];
+        setappdata(0, 'actant_analysis', actant_analysis);
 
         % get figure handle
         handle = findobj(actant, 'Tag', 'uitable_results');

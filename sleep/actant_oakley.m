@@ -99,7 +99,7 @@ if strcmpi(act.Name, 'ACT')
         sampling = 15;
     elseif strcmpi(increment, '00:30')
         sampling = 30;
-    elseif strcmpi(increment, '01:30')
+    elseif strcmpi(increment, '01:00')
         sampling = 60;
     elseif strcmpi(increment, '02:00')
         sampling = 120;
@@ -511,7 +511,7 @@ for day = 1:days
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check s/w epochs ebtween gui and actiware
-save('d:/tresorit/data/sleepwake.mat', 'wake');
+save('sleepwake.mat', 'wake');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % define output timeseries

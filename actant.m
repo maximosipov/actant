@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 12-Feb-2014 09:39:41
+% Last Modified by GUIDE v2.5 31-Mar-2014 14:25:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,23 +70,12 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before actant is made visible.
-function actant_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
+
+% --- Executes during object creation, after setting all properties.
+function figure_main_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to figure_main (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to actant (see VARARGIN)
-
-    % Choose default command line output for actant
-    handles.output = hObject;
-
-    % Update handles structure
-    guidata(hObject, handles);
-
-    % UIWAIT makes actant wait for user response (see UIRESUME)
-    % uiwait(handles.figure_main);
-
+% handles    empty - handles not created until after all CreateFcns called
     addpath('./formats');
     addpath('./sleep');
     %addpath('./wake');
@@ -105,16 +94,14 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
         '*.csv', 'GENEActiv CSV files (*.csv)';...
         '*.bin', 'GENEActiv BIN files (*.bin)';...
         '*.csv', 'Actopsy CSV files (*.csv)'
-	};
-    setappdata(0, 'g_file_types', g_file_types);
+    };
     g_type_idx = struct(...
         'actant_mat', 1, ...
         'actiwatch_awd', 2, ...
-    	'geneactiv_csv', 3, ...
-    	'geneactiv_bin', 4, ...
-    	'actopsy_csv', 5 ...
+        'geneactiv_csv', 3, ...
+        'geneactiv_bin', 4, ...
+        'actopsy_csv', 5 ...
     );
-    setappdata(0, 'g_type_idx', g_type_idx);
     g_plot_handle = -1;
 
     %---------------------------------------------------------------------
@@ -132,13 +119,31 @@ function actant_OpeningFcn(hObject, eventdata, handles, varargin)
         'overlap', 0, ...
         'main_lim', [], ...
         'top_lim', [] ...
-	);
+    );
     actant_analysis = struct(...
         'method', '_', ...
         'args', [], ...
         'diary', [],...
         'results', [] ...
-	);
+    );
+
+
+% --- Executes just before actant is made visible.
+function actant_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to actant (see VARARGIN)
+
+    % Choose default command line output for actant
+    handles.output = hObject;
+
+    % Update handles structure
+    guidata(hObject, handles);
+
+    % UIWAIT makes actant wait for user response (see UIRESUME)
+    % uiwait(handles.figure_main);
 
     update_slider(handles, 0);
 
@@ -187,7 +192,7 @@ function actant_open_dataset(fname, fi, handles)
             actant_sources{n} = fname;
         end
     end
-  
+
 
 % --------------------------------------------------------------------
 % Perform analysis
@@ -233,9 +238,6 @@ function actant_update_datasets(handles)
     end
     set(handles.uitable_data, 'Data', datasets);
     set(handles.popupmenu_dataset, 'String', nums);
-    
-    setappdata(0, 'data', actant_datasets);
-    setappdata(0, 'sources', actant_sources);
 
 
 % --------------------------------------------------------------------
@@ -447,9 +449,11 @@ function menu_sleep_analysis_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_sleep_analysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    global actant_datasets;
+    global actant_sources;
+    global actant_plot;
     global actant_analysis;
     
-    actant_analysis = getappdata(0, 'analysis');
     % set analysis label
     actant_analysis.method = 'actant_oakley';
     
@@ -465,13 +469,20 @@ function menu_sleep_analysis_Callback(hObject, eventdata, handles)
     % update the main GUI and store variabeles
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
     
-    % setappdata
-    setappdata(0, 'args', actant_analysis.args); 
-    setappdata(0, 'method', actant_analysis.method);
+    setappdata(0, 'actant_datasets', actant_datasets);
+    setappdata(0, 'actant_sources', actant_sources);
+    setappdata(0, 'actant_plot', actant_plot);
+    setappdata(0, 'actant_analysis', actant_analysis); 
     
     % open the sleep consensus diary UI
     sleep_consensus_diary()
-    
+
+    actant_datasets = getappdata(0, 'actant_datasets');
+    actant_sources = getappdata(0, 'actant_sources');
+    actant_plot = getappdata(0, 'actant_plot');
+    actant_analysis = getappdata(0, 'actant_analysis');
+
+
 % --------------------------------------------------------------------
 function menu_wake_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_wake (see GCBO)
@@ -492,6 +503,7 @@ function menu_rhythm_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+
 % --------------------------------------------------------------------
 function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_rhythm_nonparam (see GCBO)
@@ -501,9 +513,6 @@ function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
     actant_analysis.method = 'actant_activity';
     [~, actant_analysis.args] = actant_activity();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
-    % make sure it is shared between windows
-    setappdata(0, 'args', actant_analysis.args);
-    setappdata(0, 'method', actant_analysis.method);
 
 
 % --------------------------------------------------------------------
@@ -522,9 +531,6 @@ function menu_entropy_sampen_Callback(hObject, eventdata, handles)
     actant_analysis.method = 'actant_sampen';
     [~, actant_analysis.args] = actant_sampen();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
-    % make sure it is shared between windows
-    setappdata(0, 'args', actant_analysis.args);
-    setappdata(0, 'method', actant_analysis.method);
 
 
 % --------------------------------------------------------------------
@@ -536,9 +542,6 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
     actant_analysis.method = 'actant_mse';
     [~, actant_analysis.args] = actant_mse();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
-    % make sure it is shared between windows
-    setappdata(0, 'args', actant_analysis.args);
-    setappdata(0, 'method', actant_analysis.method);
 
 
 % --------------------------------------------------------------------
@@ -567,16 +570,6 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     global actant_datasets;
     global actant_analysis;
     global actant_sources;
-    
-    % sleep data requires a 2nd GUI for the Sleep Consensus Diary.
-    % To avoid overwriting the guidata of the main GUI, data should be
-    % passed to appdata (instead of guidata, globals etc.) and loaded. 
-    actant_datasets = getappdata(0, 'data');
-    actant_analysis.args = getappdata(0, 'args');
-    actant_analysis.method = getappdata(0, 'method');
-    actant_analysis.diary = getappdata(0, 'diary');
-    actant_sources = getappdata(0, 'actant_sources');
-
     
     % Get and check arguments
     n = get(handles.popupmenu_dataset, 'Value');
@@ -622,11 +615,6 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     
     % Update results table
     set(handles.uitable_results, 'Data', actant_analysis.results);
-    
-    % setappdata
-    setappdata(0, 'data', actant_datasets);
-    setappdata(0, 'sources', actant_sources);
-    setappdata(0, 'analysis', actant_analysis);
 
 
 % --- Executes on button press in pushbutton_s.
@@ -939,6 +927,7 @@ function file_menu_load_Callback(hObject, eventdata, handles)
     end
     file = [fp fn];
     load(file, 'actant_datasets', 'actant_sources', 'actant_plot', 'actant_analysis');
+
     % Update GUI
     actant_update_datasets(handles);
     set(handles.edit_plots, 'String', num2str(actant_plot.subs));
