@@ -65,6 +65,9 @@ if strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ\n')),
         end
     end
     ts = activity(fid, fin, epoch);
+elseif strcmp(typestr, sprintf('NAME,ACCX,ACCY,ACCZ,ACC,COUNT\n')),
+    % Do not convert
+    ts = activity_noconv(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
     % Ask about conversion epoch
     if nargin == 2,
@@ -76,6 +79,9 @@ elseif strcmp(typestr, sprintf('NAME,LIGHT\n')),
         end
     end
     ts = light(fid, fin, epoch);
+elseif strcmp(typestr, sprintf('NAME,LIGHT,COUNT\n')),
+    % Do not convert
+    ts = light_noconv(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,LAT,LON\n')),
     ts = location(fid, fin);
 elseif strcmp(typestr, sprintf('NAME,TYPE,DIR,ID,LENGTH\n')),
@@ -174,6 +180,67 @@ function ts = activity(fid, fin, epoch)
     end
     waitbar(1, hw);
     close (hw);
+
+
+function ts = activity_noconv(fid, fin)
+    tmp = fgets(fid);
+    % Create timeseries
+    ts.acc_x = timeseries('ACC_X');
+    ts.acc_x.DataInfo.Unit = 'm/s^2';
+    ts.acc_x.TimeInfo.Units = 'days';
+    ts.acc_x.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc_y = timeseries('ACC_Y');
+    ts.acc_y.DataInfo.Unit = 'm/s^2';
+    ts.acc_y.TimeInfo.Units = 'days';
+    ts.acc_y.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc_z = timeseries('ACC_Z');
+    ts.acc_z.DataInfo.Unit = 'm/s^2';
+    ts.acc_z.TimeInfo.Units = 'days';
+    ts.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.acc = timeseries('ACC');
+    ts.acc.DataInfo.Unit = 'm/s^2';
+    ts.acc.TimeInfo.Units = 'days';
+    ts.acc.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.count = timeseries('COUNT');
+    ts.count.DataInfo.Unit = 'samples';
+    ts.count.TimeInfo.Units = 'days';
+    ts.count.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    % We may not have any data
+    if tmp == -1,
+        return;
+    end
+    % Read/convert data in blocks
+    tmp = textscan(fid, '%s%f%f%f%f%f', 'Delimiter', ',');
+    time = localtime(tmp{1});
+    % add raw samples
+    ts.acc_x = addsample(ts.acc_x, 'Data', tmp{2}, 'Time', time);
+    ts.acc_y = addsample(ts.acc_y, 'Data', tmp{3}, 'Time', time);
+    ts.acc_z = addsample(ts.acc_z, 'Data', tmp{4}, 'Time', time);
+    ts.acc = addsample(ts.acc, 'Data', tmp{5}, 'Time', time);
+    ts.count = addsample(ts.count, 'Data', tmp{6}, 'Time', time);
+
+
+function ts = light_noconv(fid, fin)
+    tmp = fgets(fid);
+    % Create timeseries
+    ts.light = timeseries('LIGHT');
+    ts.light.DataInfo.Unit = 'lux';
+    ts.light.TimeInfo.Units = 'days';
+    ts.light.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    ts.count = timeseries('COUNT');
+    ts.count.DataInfo.Unit = 'samples';
+    ts.count.TimeInfo.Units = 'days';
+    ts.count.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+    % We may not have any data
+    if tmp == -1,
+        return;
+    end
+    % Read/convert data in blocks
+    tmp = textscan(fid, '%s%f%f', 'Delimiter', ',');
+    time = localtime(tmp{1});
+    % add raw samples
+    ts.light = addsample(ts.light, 'Data', tmp{2}, 'Time', time);
+    ts.count = addsample(ts.count, 'Data', tmp{3}, 'Time', time);
 
 
 function ts = light(fid, fin, epoch)
