@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 31-Mar-2014 14:25:55
+% Last Modified by GUIDE v2.5 01-Apr-2014 14:06:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -545,6 +545,24 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
+function menu_rhythm_nonparam_w_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_rhythm_nonparam_w (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function menu_entropy_sampen_w_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_entropy_sampen_w (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global actant_analysis;
+    actant_analysis.method = 'actant_sampen_w';
+    [~, actant_analysis.args] = actant_sampen_w();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
+
+
+% --------------------------------------------------------------------
 function menu_help_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_help (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -573,6 +591,7 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     
     % Get and check arguments
     n = get(handles.popupmenu_dataset, 'Value');
+    actant_analysis.args = get(handles.uitable_analysis, 'Data');
     
     try 
         dataset = actant_datasets{n};
