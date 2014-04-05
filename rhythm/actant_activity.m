@@ -52,14 +52,17 @@ vals = {};
 if nargin == 0,
     vals{1, 1} = '_'; vals{1, 2} = 'Non-param. Analysis';
     vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
+    vals{3, 1} = 'ts_l5'; vals{3, 2} = '2';
+    vals{4, 1} = 'ts_m10'; vals{4, 2} = '3';
     return;
 end
 
 % We had some arguments - perform analysis
 data_arg = args{2, 2};
+l5_arg = args{3, 2};
+m10_arg = args{4, 2};
 
-[ts{1} ts{2}] = l5m10(data_arg);
-[is, iv, l5, m10, ra] = activity(data_arg, ts{1}, ts{2});
+[is, iv, l5, m10, ra] = activity(data_arg, l5_arg, m10_arg);
 
 vals{1, 1} = 'IS'; vals{1, 2} = num2str(is); 
 vals{2, 1} = 'IV'; vals{2, 2} = num2str(iv); 
