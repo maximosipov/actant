@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 01-Apr-2014 14:06:58
+% Last Modified by GUIDE v2.5 05-Apr-2014 14:38:30
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -513,6 +513,17 @@ function menu_rhythm_nonparam_Callback(hObject, eventdata, handles)
     global actant_analysis;
     actant_analysis.method = 'actant_activity';
     [~, actant_analysis.args] = actant_activity();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
+
+
+% --------------------------------------------------------------------
+function menu_rhythm_l5m10_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_rhythm_l5m10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global actant_analysis;
+    actant_analysis.method = 'actant_l5m10';
+    [~, actant_analysis.args] = actant_l5m10();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 

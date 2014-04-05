@@ -1,9 +1,9 @@
-function [ts, vals] = actant_activity(args)
-% ACTANT_ACTIVITY Wrapper function for ACTIVITY
+function [ts, vals] = actant_l5m10(args)
+% ACTANT_L5M10 Wrapper function for L5M10
 %
 % Description:
-%   The function wraps non-parametric activity analysis to provide ACTANT
-%   compatible interface.
+%   The function wraps Least Active 5 hours and Most Active 10 hours
+%   activity segmentation method to provide ACTANT compatible interface.
 %
 % Arguments:
 %   args - Cell array of input timeseries and arguments
@@ -15,7 +15,7 @@ function [ts, vals] = actant_activity(args)
 % When function called without arguments, array of function arguments and
 % default values is returned in vals, prefixed with method name.
 %
-% See also ACTIVITY.
+% See also L5M10.
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -50,7 +50,7 @@ vals = {};
 
 % No arguments passed - return arguments definition
 if nargin == 0,
-    vals{1, 1} = '_'; vals{1, 2} = 'Non-param. Analysis';
+    vals{1, 1} = '_'; vals{1, 2} = 'L5/M10';
     vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
     return;
 end
@@ -59,10 +59,3 @@ end
 data_arg = args{2, 2};
 
 [ts{1} ts{2}] = l5m10(data_arg);
-[is, iv, l5, m10, ra] = activity(data_arg, ts{1}, ts{2});
-
-vals{1, 1} = 'IS'; vals{1, 2} = num2str(is); 
-vals{2, 1} = 'IV'; vals{2, 2} = num2str(iv); 
-vals{3, 1} = 'L5'; vals{3, 2} = num2str(l5); 
-vals{4, 1} = 'M10'; vals{4, 2} = num2str(m10); 
-vals{5, 1} = 'RA'; vals{5, 2} = num2str(ra); 
