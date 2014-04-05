@@ -1,4 +1,4 @@
-function [ts, vals] = actant_apply(method, data, args, callback)
+function [ts, vals] = actant_apply(method, args, callback)
 % ACTANT_APPLY Wrapper function to apply a method to multiple data windows
 %
 % Description:
@@ -12,8 +12,7 @@ function [ts, vals] = actant_apply(method, data, args, callback)
 %
 % Arguments:
 %   method - method to apply
-%   data - input data timeseries
-%   args - cell array of arguments
+%   args - cell array of input timeseries and arguments
 %
 % Results (all optional):
 %   ts - cell array of timeseries
@@ -62,8 +61,9 @@ if nargin == 1,
 end
 
 % Create timeseries objects
-[~, d] = method(data{1}, args);
-t = max(data{1}.Time);
+a = get_args(args, 1);
+[~, d] = method(a);
+t = get_stamp(a);
 for j=1:size(d, 2),
     ts{j} = timeseries(d{j,1});
     ts{j}.DataInfo.Unit = 'N/A';
@@ -73,13 +73,47 @@ for j=1:size(d, 2),
 end
 
 % Run analysis for every window and add to timeseries
-for i=2:length(data),
-    if nargin == 4,
+for i=2:get_length(args),
+    if nargin == 3,
         callback(i);
     end
-    [~, d] = method(data{i}, args);
-    t = max(data{i}.Time);
+    a = get_args(args, i);
+    [~, d] = method(a);
+    t = get_stamp(a);
     for j=1:size(d, 2),
         ts{j} = addsample(ts{j}, 'Data', str2num(d{j,2}), 'Time', t);
     end
 end
+
+return;
+
+% Get number of timeseries in the array
+function l = get_length(args)
+    l = 0;
+    for i=1:length(args(:,1)),
+        if strncmpi(args{i,1}, 'ts_', 3),
+            l = length(args{i,2});
+            return;
+        end
+    end
+
+% Prepare arguments for analysis on timeseries n
+function a = get_args(args, n)
+    a = args;
+    for i=1:length(a(:,1)),
+        if strncmpi(a{i,1}, 'ts_', 3),
+            t = a{i,2};
+            a{i,2} = t{n};
+        end
+    end
+
+% Get timestamp for analysis resutls
+function t = get_stamp(args)
+    t = 0;
+    for i=1:length(args(:,1)),
+        if strncmpi(args{i,1}, 'ts_', 3),
+            d = args{i,2};
+            t = max(d.Time);
+            return;
+        end
+    end

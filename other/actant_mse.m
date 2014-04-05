@@ -1,12 +1,11 @@
-function [ts, vals] = actant_mse(data, args)
+function [ts, vals] = actant_mse(args)
 % ACTANT_SAMPEN Wrapper function for SAMPEN
 %
 % Description:
 %   The function wraps MSE to provide ACTANT compatible interface.
 %
 % Arguments:
-%   data - input data timeseries
-%   args - Cell array of arguments
+%   args - Cell array of input timeseries and arguments
 %
 % Results (all optional):
 %   ts - Cell array of timeseries
@@ -51,17 +50,18 @@ vals = {};
 % No arguments passed - return arguments definition
 if nargin == 0,
     vals{1, 1} = '_'; vals{1, 2} = 'MSE';
-    vals{2, 1} = 'm'; vals{2, 2} = '2';
-    vals{3, 1} = 'r'; vals{3, 2} = '0.2';
-    vals{4, 1} = 'Scales Vector'; vals{4, 2} = '1,2,3,4,5,6,7,8,9,10';
+    vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
+    vals{3, 1} = 'm'; vals{3, 2} = '2';
+    vals{4, 1} = 'r'; vals{4, 2} = '0.2';
+    vals{5, 1} = 'Scales Vector'; vals{5, 2} = '1,2,3,4,5,6,7,8,9,10';
     return;
 end
 
 % We had some arguments - perform analysis
-data_arg = data.Data;
-m_arg = str2num(args{2, 2});
-r_arg = str2num(args{3, 2});
-scales_arg = str2num(args{4, 2});
+data_arg = args{2, 2}.Data;
+m_arg = str2num(args{3, 2});
+r_arg = str2num(args{4, 2});
+scales_arg = str2num(args{5, 2});
 
 [entropy, ~] = mse(data_arg, m_arg, r_arg, scales_arg);
 

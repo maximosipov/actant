@@ -1,22 +1,24 @@
-function [ts, vals] = actant_sampen(args)
-% ACTANT_SAMPEN Wrapper function for SAMPEN
+function [ts, vals] = actant_activity_w(data, args)
+% ACTANT_ACTIVITY_W Wrapper function for ACTIVITY with windows
 %
 % Description:
-%   The function wraps sampen to provide ACTANT compatible interface.
+%   The function wraps non-parametric windowed analysis to provide an
+%   ACTANT compatible interface.
 %
 % Arguments:
-%   args - Cell array of input timeseries and arguments
+%   data - input data timeseries
+%   args - cell array of arguments
 %
 % Results (all optional):
-%   ts - Cell array of timeseries
-%   vals - Cell array of results
+%   ts - cell array of timeseries
+%   vals - cell array of results
 %
 % When function called without arguments, array of function arguments and
 % default values is returned in vals, prefixed with method name.
 %
-% See also SAMPEN.
+% See also ACTIVITY.
 %
-% Copyright (C) 2011-2013, Maxim Osipov
+% Copyright (C) 2011-2014, Maxim Osipov
 %
 % All rights reserved.
 %
@@ -49,25 +51,20 @@ vals = {};
 
 % No arguments passed - return arguments definition
 if nargin == 0,
-    vals{1, 1} = '_'; vals{1, 2} = 'SampEn';
-    vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
-    vals{3, 1} = 'm'; vals{3, 2} = '2';
-    vals{4, 1} = 'r'; vals{4, 2} = '0.2';
+    [~, vals] = actant_apply(@actant_activity);
+    vals{1, 1} = '_'; vals{1, 2} = 'SampEnW';
+    vals{end+1, 1} = 'window'; vals{end, 2} = num2str(24*60*60);
     return;
 end
 
-% We had some arguments - perform analysis
-data_arg = args{2, 2}.Data;
-m_arg = str2double(args{3, 2});
-r_arg = str2double(args{4, 2});
-if isnan(m_arg) || ~isreal(m_arg) || isnan(r_arg) || ~isreal(r_arg),
+% We had some arguments - split data to windows and perform analysis
+w_arg = str2double(args{4, 2});
+if isnan(w_arg) || ~isreal(w_arg),
     errordlg('Arguments shall be numeric!', 'Error', 'modal');
     return;
 end
+data_arg = split(data, w_arg);
 
-[entropy, conf95] = sampen(data_arg, m_arg, r_arg);
-
-vals{1, 1} = 'SampEn'; vals{1, 2} = num2str(entropy); 
-vals{2, 1} = '95% conf. int.'; vals{2, 2} = num2str(conf95); 
+[ts, vals] = actant_apply(@actant_sampen, data_arg, args(1:end-1,:));
 
 end

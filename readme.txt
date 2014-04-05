@@ -1,7 +1,7 @@
 Actant - Activity Analysis Toolbox
 
-Copyright (C) 2013, Maxim Osipov <maxim.osipov@gmail.com>
-Copyright (C) 2013, Bart te Lindert <b.te.lindert@nin.knaw.nl>
+Copyright (C) 2013-2014, Maxim Osipov <maxim.osipov@gmail.com>
+Copyright (C) 2013-2014, Bart te Lindert <b.te.lindert@nin.knaw.nl>
 
 This toolbox include multiple data analysis algorithms implemented in
 Matlab and released under Open Source licences. Respective licences are
@@ -115,10 +115,9 @@ of analyzed signal.
 
 The API of analysis method is as following:
 
-function [ts vals] = actant_analysis(data, args)
+function [ts vals] = actant_analysis(args)
   Arguments:
-    data - Input data timeseries
-    args - Cell array of arguments
+    args - Cell array of input timeseries and arguments
 
   Results (all optional):
     ts - Cell array of timeseries
@@ -127,6 +126,10 @@ function [ts vals] = actant_analysis(data, args)
 When method called without arguments, array of function arguments and
 default values is returned in vals, where the first element of array is '_'
 with the name of the analysis method as value.
+
+If argument name is preceeded with "ts_" - it is considered as an index in
+the table of timeseries and timeseries object is passed to the analysis
+function, in all other argument is passed as a string.
 
 3. Visualization
 ================

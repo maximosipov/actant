@@ -1,4 +1,4 @@
-function [ts, vals] = actant_activity(data, args)
+function [ts, vals] = actant_activity(args)
 % ACTANT_ACTIVITY Wrapper function for ACTIVITY
 %
 % Description:
@@ -6,8 +6,7 @@ function [ts, vals] = actant_activity(data, args)
 %   compatible interface.
 %
 % Arguments:
-%   data - input data timeseries
-%   args - Cell array of arguments
+%   args - Cell array of input timeseries and arguments
 %
 % Results (all optional):
 %   ts - Cell array of timeseries
@@ -52,14 +51,15 @@ vals = {};
 % No arguments passed - return arguments definition
 if nargin == 0,
     vals{1, 1} = '_'; vals{1, 2} = 'Non-param. Analysis';
+    vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
     return;
 end
 
 % We had some arguments - perform analysis
-data_arg = data.Data;
+data_arg = args{2, 2};
 
-[ts{1} ts{2}] = l5m10(data);
-[is, iv, l5, m10, ra] = activity(data, ts{1}, ts{2});
+[ts{1} ts{2}] = l5m10(data_arg);
+[is, iv, l5, m10, ra] = activity(data_arg, ts{1}, ts{2});
 
 vals{1, 1} = 'IS'; vals{1, 2} = num2str(is); 
 vals{2, 1} = 'IV'; vals{2, 2} = num2str(iv); 

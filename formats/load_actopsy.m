@@ -48,10 +48,16 @@ end
 % read activity data
 typestr = fgets(fid);
 unitstr = fgets(fid);
-tmp = textscan(fid, '%s%f%f%f', 'Delimiter', ',');
+fields = regexp(typestr, ',', 'split');
+if length(fields) == 4,
+    tmp = textscan(fid, '%s%f%f%f', 'Delimiter', ',');
+elseif length(fields) == 6,
+    tmp = textscan(fid, '%s%f%f%f%f%f', 'Delimiter', ',');
+end
 fclose(fid);
-% ERROR: ignoring timezone here!
-time = datenum(tmp{1}, 'yyyy-mm-dd HH:MM:SS.FFF');
+
+% get time
+time = localtime(tmp{1});
 
 % create timeseries
 ts.acc_x = timeseries(tmp{2}, time, 'Name', 'ACCX');
@@ -68,3 +74,15 @@ ts.acc_z = timeseries(tmp{4}, time, 'Name', 'ACCZ');
 ts.acc_z.DataInfo.Unit = 'm/s^2';
 ts.acc_z.TimeInfo.Units = 'days';
 ts.acc_z.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+if length(fields) == 6,
+    ts.acc = timeseries(tmp{5}, time, 'Name', 'ACC');
+    ts.acc.DataInfo.Unit = 'm/s^2';
+    ts.acc.TimeInfo.Units = 'days';
+    ts.acc.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+
+    ts.count = timeseries(tmp{6}, time, 'Name', 'COUNT');
+    ts.count.DataInfo.Unit = 'counts';
+    ts.count.TimeInfo.Units = 'days';
+    ts.count.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
+end

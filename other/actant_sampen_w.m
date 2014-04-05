@@ -1,4 +1,4 @@
-function [ts, vals] = actant_sampen_w(data, args)
+function [ts, vals] = actant_sampen_w(args)
 % ACTANT_SAMPEN_W Wrapper function for SAMPEN with windows
 %
 % Description:
@@ -6,8 +6,7 @@ function [ts, vals] = actant_sampen_w(data, args)
 %   compatible interface.
 %
 % Arguments:
-%   data - input data timeseries
-%   args - cell array of arguments
+%   args - cell array of input timeseries and arguments
 %
 % Results (all optional):
 %   ts - cell array of timeseries
@@ -57,14 +56,20 @@ if nargin == 0,
     return;
 end
 
-% We had some arguments - split data to windows and perform analysis
-w_arg = str2double(args{4, 2});
+% Find window length
+w_arg = str2double(args{5, 2});
 if isnan(w_arg) || ~isreal(w_arg),
     errordlg('Arguments shall be numeric!', 'Error', 'modal');
     return;
 end
-data_arg = split(data, w_arg);
 
-[ts, vals] = actant_apply(@actant_sampen, data_arg, args(1:end-1,:));
+% Split timeseries arguments
+for i=1:length(args(:,1)),
+    if strncmpi(args{i,1}, 'ts_', 3),
+        args{i,2} = split(args{i,2}, w_arg);
+    end
+end
+
+[ts, vals] = actant_apply(@actant_sampen, args(1:end-1,:));
 
 end

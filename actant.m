@@ -196,14 +196,14 @@ function actant_open_dataset(fname, fi, handles)
 
 % --------------------------------------------------------------------
 % Perform analysis
-function actant_analyze(method, dataset, args, handles)
+function actant_analyze(method, args, handles)
     global actant_sources;
     global actant_datasets;
     global actant_analysis;
     
     % Perform analysis
     h = waitbar(0, 'Please wait while analysis completes...');
-    [data, actant_analysis.results] = method(dataset, args);
+    [data, actant_analysis.results] = method(args);
     waitbar(1, h);
     close(h);
     
@@ -460,10 +460,11 @@ function menu_sleep_analysis_Callback(hObject, eventdata, handles)
     % specify values
     vals = {};
     vals{1,1} = 'Algorithm';   vals{1, 2} = 'oakley';
-    vals{2,1} = 'Method';      vals{2, 2} = 'i';
-    vals{3,1} = 'Sensitivity'; vals{3, 2} = 'm';
-    vals{4,1} = 'Snooze';      vals{4, 2} = 'on';
-    vals{5,1} = 'Time window'; vals{5, 2} = 10; 
+    vals{2,1} = 'ts_data';     vals{2, 2} = '1';
+    vals{3,1} = 'Method';      vals{3, 2} = 'i';
+    vals{4,1} = 'Sensitivity'; vals{4, 2} = 'm';
+    vals{5,1} = 'Snooze';      vals{5, 2} = 'on';
+    vals{6,1} = 'Time window'; vals{6, 2} = 10; 
     actant_analysis.args = vals;
     
     % update the main GUI and store variabeles
@@ -589,31 +590,37 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     global actant_analysis;
     global actant_sources;
     
-    % Get and check arguments
-    n = get(handles.popupmenu_dataset, 'Value');
+    % Get arguments
     actant_analysis.args = get(handles.uitable_analysis, 'Data');
-    
-    try 
-        dataset = actant_datasets{n};
-    catch ME
-        % Give more information for mismatch.
-        if (strcmp(ME.identifier,'MATLAB:badsubscript'))
-            errordlg('Please select dataset!', 'Error', 'modal');
-            return
-        end
-    end
-    
+
+    % Check if method is defined
     if strcmp(actant_analysis.method, '_'),
         errordlg('Please select analysis method!', 'Error', 'modal');
         return;
     end
     
+    % Convert timeseries index into object
+    for i=1:length(actant_analysis.args(:,1)),
+        if strncmpi(actant_analysis.args{i,1}, 'ts_', 3),
+            try
+                n = str2num(actant_analysis.args{i,2});
+                actant_analysis.args{i,2} = actant_datasets{n};
+            catch ME
+                % Give more information for mismatch.
+                if (strcmp(ME.identifier,'MATLAB:badsubscript'))
+                    errordlg('Please select a valid dataset!', 'Error', 'modal');
+                    return
+                end
+            end
+        end
+    end
+
     % Perform analysis
     if strcmpi(actant_analysis.method, 'actant_oakley')
         % get additional args from Sleep Consensus Diary
         %args2 = get(handles.uitable_results, 'Data');
         %args2 = actant_analysis.diary
-        [ts actant_analysis.results] = actant_oakley(dataset, actant_analysis.args, actant_analysis.diary);
+        [ts actant_analysis.results] = actant_oakley(actant_analysis.args, actant_analysis.diary);
 
         % Update internal state
         if ~isempty(ts),
@@ -626,12 +633,12 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     else
         method = str2func(actant_analysis.method);    
         args = actant_analysis.args;
-        actant_analyze(method, dataset, args, handles);
+        actant_analyze(method, args, handles);
     end
-    
+
     % Update datasets table
     actant_update_datasets(handles);
-    
+
     % Update results table
     set(handles.uitable_results, 'Data', actant_analysis.results);
 

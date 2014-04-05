@@ -1,4 +1,4 @@
-function [ts, vals] = actant_oakley(act, args1, args2)
+function [ts, vals] = actant_oakley(args1, args2)
 % OAKLEY markup epochs with activity counts as sleep/wake and extract sleep
 % parameters
 %
@@ -67,16 +67,13 @@ function [ts, vals] = actant_oakley(act, args1, args2)
 %% FIRST CHECK FOR SUFFICIENT INPUT ARGUMENTS
 vals = {};
 
-if nargin < 3
+if nargin < 2
     errordlg('Not enough input arguments', 'Error', 'modal')
     return
 end
 
 %% THEN CHECK IF NONE OF THE ARGUMENTS IS EMPTY
-if isempty(act)
-    errordlg('Not enough input arguments', 'Error', 'modal')
-    return
-elseif isempty(args1)
+if isempty(args1)
     errordlg('No method selected', 'Error', 'modal')
     return
 elseif isempty(args2)
@@ -86,6 +83,7 @@ end
 
 
 %% CHECK DATA INPUT FORMAT
+act = args1{2, 2};
 if strcmpi(act.Name, 'ACT')
     % data is counts data
     data = act.Data;
@@ -122,10 +120,10 @@ else
     return
 end
 
-if nargin == 1
+if nargin == 0
     errordlg('No algorithm and SCD data available!', 'Error', 'modal');
     return;
-elseif nargin == 2
+elseif nargin == 1
     errordlg('Please fill out Sleep Consensus Diary!', 'Error', 'modal');
     return;
 end
@@ -157,10 +155,10 @@ vals{20, 1} = 'Mobile time (min)';
 vals{21, 1} = 'Immobile time (min)';
 
 
-method      = args1{2,2};
-sensitivity = args1{3,2};
-snooze      = args1{4,2};
-timewindow  = args1{5,2};
+method      = args1{3,2};
+sensitivity = args1{4,2};
+snooze      = args1{5,2};
+timewindow  = args1{6,2};
 
 %% GET THRESHOLD
 % convert sensitivity to threshold
