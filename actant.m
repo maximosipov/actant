@@ -449,39 +449,10 @@ function menu_sleep_analysis_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_sleep_analysis (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global actant_datasets;
-    global actant_sources;
-    global actant_plot;
     global actant_analysis;
-    
-    % set analysis label
     actant_analysis.method = 'actant_oakley';
-    
-    % specify values
-    vals = {};
-    vals{1,1} = 'Algorithm';   vals{1, 2} = 'oakley';
-    vals{2,1} = 'ts_data';     vals{2, 2} = '1';
-    vals{3,1} = 'Method';      vals{3, 2} = 'i';
-    vals{4,1} = 'Sensitivity'; vals{4, 2} = 'm';
-    vals{5,1} = 'Snooze';      vals{5, 2} = 'on';
-    vals{6,1} = 'Time window'; vals{6, 2} = 10; 
-    actant_analysis.args = vals;
-    
-    % update the main GUI and store variabeles
+    [~, actant_analysis.args] = actant_oakley();
     set(handles.uitable_analysis, 'Data', actant_analysis.args);
-    
-    setappdata(0, 'actant_datasets', actant_datasets);
-    setappdata(0, 'actant_sources', actant_sources);
-    setappdata(0, 'actant_plot', actant_plot);
-    setappdata(0, 'actant_analysis', actant_analysis); 
-    
-    % open the sleep consensus diary UI
-    sleep_consensus_diary()
-
-    actant_datasets = getappdata(0, 'actant_datasets');
-    actant_sources = getappdata(0, 'actant_sources');
-    actant_plot = getappdata(0, 'actant_plot');
-    actant_analysis = getappdata(0, 'actant_analysis');
 
 
 % --------------------------------------------------------------------
@@ -500,8 +471,8 @@ function menu_wake_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_wake (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
- 
-    
+
+
 % --------------------------------------------------------------------
 function menu_wake_bins_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_wake_bins (see GCBO)
@@ -637,26 +608,9 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
         end
     end
 
-    % Perform analysis
-    if strcmpi(actant_analysis.method, 'actant_oakley')
-        % get additional args from Sleep Consensus Diary
-        %args2 = get(handles.uitable_results, 'Data');
-        %args2 = actant_analysis.diary
-        [ts actant_analysis.results] = actant_oakley(actant_analysis.args, actant_analysis.diary);
-
-        % Update internal state
-        if ~isempty(ts),
-            n = length(actant_datasets);
-            for i = 1:length(ts),
-                actant_datasets{n+i} = ts(i);
-                actant_sources{n+i} = 'actant_oakley';
-            end
-        end
-    else
-        method = str2func(actant_analysis.method);    
-        args = actant_analysis.args;
-        actant_analyze(method, args, handles);
-    end
+    method = str2func(actant_analysis.method);    
+    args = actant_analysis.args;
+    actant_analyze(method, args, handles);
 
     % Update datasets table
     actant_update_datasets(handles);

@@ -95,7 +95,7 @@ out_of_bed.DataInfo.Unit = 'days';
 out_of_bed.TimeInfo.Units = 'time';
 out_of_bed.TimeInfo.StartDate = 'JAN-00-0000 00:00:00';
 
-for i=1:length(size(diary, 1)),
+for i=1:size(diary, 1),
     t = datenum(diary{i, 1}, 'dd-mm-yy');
     bed_time = addsample(bed_time, 'Data', diary{i, 2}, 'Time', t);
     lights_off = addsample(lights_off, 'Data', diary{i, 3}, 'Time', t);
