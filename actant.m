@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 05-Apr-2014 14:38:30
+% Last Modified by GUIDE v2.5 05-Apr-2014 16:19:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -482,6 +482,17 @@ function menu_sleep_analysis_Callback(hObject, eventdata, handles)
     actant_sources = getappdata(0, 'actant_sources');
     actant_plot = getappdata(0, 'actant_plot');
     actant_analysis = getappdata(0, 'actant_analysis');
+
+
+% --------------------------------------------------------------------
+function menu_sleep_scd_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_sleep_scd (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global actant_analysis;
+    actant_analysis.method = 'actant_scd';
+    [~, actant_analysis.args] = actant_scd();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 % --------------------------------------------------------------------

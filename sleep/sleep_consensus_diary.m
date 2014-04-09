@@ -22,7 +22,7 @@ function varargout = sleep_consensus_diary(varargin)
 
 % Edit the above text to modify the response to help sleep_consensus_diary
 
-% Last Modified by GUIDE v2.5 14-Feb-2014 13:04:57
+% Last Modified by GUIDE v2.5 05-Apr-2014 15:53:41
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,20 +59,16 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 % Check for uitable data
-global actant_analysis;
-actant_analysis = getappdata(0, 'actant_analysis');
-data = actant_analysis.diary;
-
-if isempty(data)
+if nargin<4,
     data = {'dd-mm-yy', 2300, 2315, 10, 4, 25, 0700, 0715};
     set(handles.uitable_scd, 'Data', data);
 else
-    %data = actant_analysis.diary';
+    data = {'dd-mm-yy', 2300, 2315, 10, 4, 25, 0700, 0715};
     set(handles.uitable_scd, 'Data', data);
 end
 
 % UIWAIT makes sleep_consensus_diary wait for user response (see UIRESUME)
-% uiwait(handles.scd);
+uiwait(handles.scd);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -82,8 +78,12 @@ function varargout = sleep_consensus_diary_OutputFcn(hObject, eventdata, handles
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Get default command line output from handles structure
-varargout{1} = handles.output;
+data = get(handles.uitable_scd, 'Data');
+labels = {'Date', 'Bed time', 'Lights off', 'Latency', 'Wake times',...
+               'Wake duration', 'Wake time', 'Out of bed'};
+
+varargout{1} = data;
+delete(handles.scd);
 
 
 
@@ -162,7 +162,7 @@ function pushbutton_cancel_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
     
     % close figure
-    close(sleep_consensus_diary)
+    close(handles.scd)
 
     
 % --- Executes on button press in pushbutton_save.
@@ -170,27 +170,9 @@ function pushbutton_save_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_save (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global actant_analysis
-    
-    actant_analysis = getappdata(0, 'actant_analysis');
-    
-    % get uitable data
-    data = get(handles.uitable_scd, 'Data');
-    actant_analysis.diary = data;
-    
-    % get figure handle 
-    handle = findobj(actant, 'Tag', 'uitable_results');
-    
-    % update main GUI
-    labels = {'Date', 'Bed time', 'Lights off', 'Latency', 'Wake times',...
-              'Wake duration', 'Wake time', 'Out of bed'};
-    set(handle, 'Data', [labels; data]');
-
-    actant_analysis.diary = data;
-    setappdata(0, 'actant_analysis', actant_analysis);
 
     % close figure
-    close(sleep_consensus_diary)
+    close(handles.scd)
 
 
 % --- Executes on button press in pushbutton_reset.
@@ -198,7 +180,6 @@ function pushbutton_reset_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton_reset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global actant_analysis
             
 % questdlg
 choice = questdlg('Are you sure you want to reset the sleep diary?', ...
@@ -208,16 +189,22 @@ choice = questdlg('Are you sure you want to reset the sleep diary?', ...
 % Handle response
 switch choice
     case 'Yes'
-        % clear appdata
-        actant_analysis.diary = [];
-        setappdata(0, 'actant_analysis', actant_analysis);
-
-        % get figure handle
-        handle = findobj(actant, 'Tag', 'uitable_results');
-
         % remove any data from main GUI results table
         set(handle, 'Data', {});
-
-        sleep_consensus_diary()
     case 'No'
+end
+
+
+% --- Executes when user attempts to close scd.
+function scd_CloseRequestFcn(hObject, eventdata, handles)
+% hObject    handle to scd (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+if isequal(get(hObject, 'waitstatus'), 'waiting')
+    % The GUI is still in UIWAIT, us UIRESUME
+    uiresume(hObject);
+else
+    % The GUI is no longer waiting, just close it
+    delete(hObject);
 end

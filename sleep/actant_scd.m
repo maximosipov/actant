@@ -1,9 +1,9 @@
-function [ts, vals] = actant_oakley(args)
-% ACTANT_OAKLEY Wrapper function for Oakley sleep segmentation
+function [ts, vals] = actant_scd(args)
+% ACTANT_SCD Wrapper function for Sleep Consensus Diary
 %
 % Description:
-%   The function wraps the Oakley sleep segmentation algorithm to provide
-%   ACTANT compatible interface.
+%   The function wraps the Sleep Consensus Diary to provide ACTANT
+%   compatible interface.
 %
 % Arguments:
 %   args - Cell array of input timeseries and arguments
@@ -15,7 +15,7 @@ function [ts, vals] = actant_oakley(args)
 % When function called without arguments, array of function arguments and
 % default values is returned in vals, prefixed with method name.
 %
-% See also OAKLEY.
+% See also SLEEP_CONSENSUS_DIARY.
 %
 % Copyright (C) 2011-2013, Maxim Osipov
 %
@@ -52,13 +52,6 @@ vals = {};
 if nargin == 0,
     vals{1, 1} = '_'; vals{1, 2} = 'Sleep Consensus Diary';
     vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
-    vals{3, 1} = 'ts_bed_time'; vals{3, 2} = '1';
-    vals{4, 1} = 'ts_lights_off'; vals{4, 2} = '1';
-    vals{5, 1} = 'ts_latency'; vals{5, 2} = '1';
-    vals{6, 1} = 'ts_wake_times'; vals{6, 2} = '1';
-    vals{7, 1} = 'ts_wake_duration'; vals{7, 2} = '1';
-    vals{8, 1} = 'ts_wake_time'; vals{8, 2} = '1';
-    vals{9, 1} = 'ts_out_of_bed'; vals{9, 2} = '1';
     return;
 end
 
