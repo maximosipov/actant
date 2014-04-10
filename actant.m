@@ -237,7 +237,7 @@ function actant_update_datasets(handles)
         nums{i} = num2str(i);
     end
     set(handles.uitable_data, 'Data', datasets);
-    set(handles.popupmenu_dataset, 'String', nums);
+    %set(handles.popupmenu_dataset, 'String', nums);
 
 
 % --------------------------------------------------------------------
@@ -805,32 +805,6 @@ function edit_top_max_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Popup
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% --- Executes on selection change in popupmenu_dataset.
-function popupmenu_dataset_Callback(hObject, eventdata, handles)
-% hObject    handle to popupmenu_dataset (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns popupmenu_dataset contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from popupmenu_dataset
-
-
-% --- Executes during object creation, after setting all properties.
-function popupmenu_dataset_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to popupmenu_dataset (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
