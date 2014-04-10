@@ -539,13 +539,6 @@ function menu_entropy_mse_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function menu_rhythm_nonparam_w_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_rhythm_nonparam_w (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
 function menu_entropy_sampen_w_Callback(hObject, eventdata, handles)
 % hObject    handle to menu_entropy_sampen_w (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
