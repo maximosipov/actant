@@ -52,13 +52,13 @@ vals = {};
 % No arguments passed - return arguments definition
 if nargin == 0,
     [~, vals] = actant_apply(@actant_activity);
-    vals{1, 1} = '_'; vals{1, 2} = 'SampEnW';
-    vals{end+1, 1} = 'window'; vals{end, 2} = num2str(24*60*60);
+    vals{1, 1} = '_';           vals{1, 2} = 'STR'; vals{1, 3} = 'Non Param. W';
+    vals{end+1, 1} = 'window';  vals{end, 2} = 'NUM'; vals{end, 3} = num2str(7*24*60*60);
     return;
 end
 
 % We had some arguments - split data to windows and perform analysis
-w_arg = str2double(args{4, 2});
+w_arg = str2double(args{4, 3});
 if isnan(w_arg) || ~isreal(w_arg),
     errordlg('Arguments shall be numeric!', 'Error', 'modal');
     return;

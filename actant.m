@@ -593,11 +593,11 @@ function pushbutton_analyze_Callback(hObject, eventdata, handles)
     end
     
     % Convert timeseries index into object
-    for i=1:length(actant_analysis.args(:,1)),
-        if strncmpi(actant_analysis.args{i,1}, 'ts_', 3),
+    for i=1:length(actant_analysis.args(:,2)),
+        if strcmpi(actant_analysis.args{i,2}, 'TS'),
             try
-                n = str2num(actant_analysis.args{i,2});
-                actant_analysis.args{i,2} = actant_datasets{n};
+                n = str2num(actant_analysis.args{i,3});
+                actant_analysis.args{i,3} = actant_datasets{n};
             catch ME
                 % Give more information for mismatch.
                 if (strcmp(ME.identifier,'MATLAB:badsubscript'))

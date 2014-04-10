@@ -50,12 +50,12 @@ vals = {};
 
 % No arguments passed - return arguments definition
 if nargin == 0,
-    vals{1, 1} = '_'; vals{1, 2} = 'L5/M10';
-    vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
+    vals{1, 1} = '_';       vals{1, 2} = 'STR'; vals{1, 3} = 'L5/M10';
+    vals{2, 1} = 'Data';    vals{2, 2} = 'TS';  vals{2, 3} = '1';
     return;
 end
 
 % We had some arguments - perform analysis
-data_arg = args{2, 2};
+data_arg = args{2, 3};
 
 [ts{1} ts{2}] = l5m10(data_arg);

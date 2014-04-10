@@ -49,17 +49,17 @@ vals = {};
 
 % No arguments passed - return arguments definition
 if nargin == 0,
-    vals{1, 1} = '_'; vals{1, 2} = 'SampEn';
-    vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
-    vals{3, 1} = 'm'; vals{3, 2} = '2';
-    vals{4, 1} = 'r'; vals{4, 2} = '0.2';
+    vals{1, 1} = '_';       vals{1, 2} = 'STR'; vals{1, 3} = 'SampEn';
+    vals{2, 1} = 'Data';    vals{2, 2} = 'TS';  vals{2, 3} = '1';
+    vals{3, 1} = 'm';       vals{3, 2} = 'NUM'; vals{3, 3} = '2';
+    vals{4, 1} = 'r';       vals{4, 2} = 'NUM'; vals{4, 3} = '0.2';
     return;
 end
 
 % We had some arguments - perform analysis
-data_arg = args{2, 2}.Data;
-m_arg = str2double(args{3, 2});
-r_arg = str2double(args{4, 2});
+data_arg = args{2, 3}.Data;
+m_arg = str2double(args{3, 3});
+r_arg = str2double(args{4, 3});
 if isnan(m_arg) || ~isreal(m_arg) || isnan(r_arg) || ~isreal(r_arg),
     errordlg('Arguments shall be numeric!', 'Error', 'modal');
     return;

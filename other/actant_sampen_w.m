@@ -51,22 +51,22 @@ vals = {};
 % No arguments passed - return arguments definition
 if nargin == 0,
     [~, vals] = actant_apply(@actant_sampen);
-    vals{1, 1} = '_'; vals{1, 2} = 'SampEnW';
-    vals{end+1, 1} = 'window'; vals{end, 2} = num2str(24*60*60);
+    vals{1, 1} = '_';           vals{1, 2} = 'STR'; vals{1, 3} = 'SampEnW';
+    vals{end+1, 1} = 'window';  vals{end, 2} = 'NUM'; vals{end, 3} = num2str(24*60*60);
     return;
 end
 
 % Find window length
-w_arg = str2double(args{5, 2});
+w_arg = str2double(args{5, 3});
 if isnan(w_arg) || ~isreal(w_arg),
     errordlg('Arguments shall be numeric!', 'Error', 'modal');
     return;
 end
 
 % Split timeseries arguments
-for i=1:length(args(:,1)),
-    if strncmpi(args{i,1}, 'ts_', 3),
-        args{i,2} = split(args{i,2}, w_arg);
+for i=1:length(args(:,2)),
+    if strcmpi(args{i,2}, 'TS'),
+        args{i,3} = split(args{i,3}, w_arg);
     end
 end
 

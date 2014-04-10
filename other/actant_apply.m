@@ -90,9 +90,9 @@ return;
 % Get number of timeseries in the array
 function l = get_length(args)
     l = 0;
-    for i=1:length(args(:,1)),
-        if strncmpi(args{i,1}, 'ts_', 3),
-            l = length(args{i,2});
+    for i=1:length(args(:,2)),
+        if strcmpi(args{i,2}, 'TS'),
+            l = length(args{i,3});
             return;
         end
     end
@@ -100,19 +100,19 @@ function l = get_length(args)
 % Prepare arguments for analysis on timeseries n
 function a = get_args(args, n)
     a = args;
-    for i=1:length(a(:,1)),
-        if strncmpi(a{i,1}, 'ts_', 3),
-            t = a{i,2};
-            a{i,2} = t{n};
+    for i=1:length(a(:,2)),
+        if strcmpi(a{i,2}, 'TS'),
+            t = a{i,3};
+            a{i,3} = t{n};
         end
     end
 
 % Get timestamp for analysis resutls
 function t = get_stamp(args)
     t = 0;
-    for i=1:length(args(:,1)),
-        if strncmpi(args{i,1}, 'ts_', 3),
-            d = args{i,2};
+    for i=1:length(args(:,2)),
+        if strcmpi(args{i,2}, 'TS'),
+            d = args{i,3};
             t = max(d.Time);
             return;
         end

@@ -50,17 +50,17 @@ vals = {};
 
 % No arguments passed - return arguments definition
 if nargin == 0,
-    vals{1, 1} = '_'; vals{1, 2} = 'Non-param. Analysis';
-    vals{2, 1} = 'ts_data'; vals{2, 2} = '1';
-    vals{3, 1} = 'ts_l5'; vals{3, 2} = '2';
-    vals{4, 1} = 'ts_m10'; vals{4, 2} = '3';
+    vals{1, 1} = '_';       vals{1, 2} = 'STR'; vals{1, 3} = 'Non-param. Analysis';
+    vals{2, 1} = 'Data';    vals{2, 2} = 'TS';  vals{2, 3} = '1';
+    vals{3, 1} = 'L5';      vals{3, 2} = 'TS';  vals{3, 3} = '2';
+    vals{4, 1} = 'M10';     vals{4, 2} = 'TS';  vals{4, 3} = '3';
     return;
 end
 
 % We had some arguments - perform analysis
-data_arg = args{2, 2};
-l5_arg = args{3, 2};
-m10_arg = args{4, 2};
+data_arg = args{2, 3};
+l5_arg = args{3, 3};
+m10_arg = args{4, 3};
 
 [is, iv, l5, m10, ra] = activity(data_arg, l5_arg, m10_arg);
 
