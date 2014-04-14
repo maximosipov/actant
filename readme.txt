@@ -44,6 +44,10 @@ analysis methods include:
    "Multiscale entropy analysis of complex physiologic time series."
    Physical review letters 2002; 89(6):068102.
 
+ - Activity segmentation based on Bayesian changepoint detection:
+   Adams, R. P., & MacKay, D. J. C. (2007). Bayesian Online Changepoint
+   Detection. Cambridge, UK.
+
 The toolbox provides flexible interface for integration of both new data
 formats and analysis methods. 
 

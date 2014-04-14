@@ -49,7 +49,7 @@ function varargout = actant(varargin)
 
 % Edit the above text to modify the response to help actant
 
-% Last Modified by GUIDE v2.5 05-Apr-2014 16:19:57
+% Last Modified by GUIDE v2.5 14-Apr-2014 17:04:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,6 +82,7 @@ function figure_main_CreateFcn(hObject, eventdata, handles)
     addpath('./rhythm');
     addpath('./other');
     addpath('./plot');
+    addpath('./segment');
 
     %---------------------------------------------------------------------
     % Constant or internal data
@@ -467,17 +468,21 @@ function menu_sleep_scd_Callback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function menu_wake_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_wake (see GCBO)
+function menu_activity_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_activity (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 
 % --------------------------------------------------------------------
-function menu_wake_bins_Callback(hObject, eventdata, handles)
-% hObject    handle to menu_wake_bins (see GCBO)
+function menu_activity_segment_adams_Callback(hObject, eventdata, handles)
+% hObject    handle to menu_activity_segment_adams (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    global actant_analysis;
+    actant_analysis.method = 'actant_bayes_cp';
+    [~, actant_analysis.args] = actant_bayes_cp();
+    set(handles.uitable_analysis, 'Data', actant_analysis.args);
 
 
 % --------------------------------------------------------------------
