@@ -1,5 +1,5 @@
 function status = convert_actopsy(fin, fout, epoch)
-% LOAD_ACTOPSY Convert data from Actopsy CSV files to plain Actant MAT
+% CONVERT_ACTOPSY Convert data from Actopsy CSV files to plain Actant MAT
 %
 % Description:
 %   The function takes a CSV files with data from the Actopsy app and
@@ -103,11 +103,12 @@ status = true;
 % Converts to localtime from yyyy-mm-dd HH:MM:SS.FFF+ZZZZ
 function t = localtime(s)
         t = datenum(s, 'yyyy-mm-dd HH:MM:SS.FFF');
-        zh = cellfun(@(x) x(24:26), s, 'UniformOutput', false);
-        zm = cellfun(@(x) x(27:28), s, 'UniformOutput', false);
-        zh_num = str2double(zh)/(24);
-        zm_num = str2double(zm)/(24*60) .* sign(zh_num);
-        t = t + zh_num/(24) + zm_num/(24*60);
+% time is in localtime already and this is what we need, ignore timezone
+%        zh = cellfun(@(x) x(24:26), s, 'UniformOutput', false);
+%        zm = cellfun(@(x) x(27:28), s, 'UniformOutput', false);
+%        zh_num = str2double(zh)/(24);
+%        zm_num = str2double(zm)/(24*60) .* sign(zh_num);
+%        t = t + zh_num/(24) + zm_num/(24*60);
 
 function ts = activity(fid, fin, epoch)
     % Define waitbar increment (we are positioned just next to header)
